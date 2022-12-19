@@ -40,8 +40,20 @@ button:SetScript("OnMouseUp", function(self, button)
     local greeting = _G.profiles[_G.currentProfile].greetings[math.random(#_G.profiles[_G.currentProfile].greetings)]
     local emote = _G.profiles[_G.currentProfile].greetingEmotes[math.random(#_G.profiles[_G.currentProfile].greetingEmotes)]
 
-    -- Send the greeting and emote to the say channel
-    SendChatMessage(greeting, "SAY")
+    -- Determine the appropriate chat channel to use
+    local chatChannel
+    if IsInGroup() then
+      if IsInInstance() then
+        chatChannel = "INSTANCE_CHAT"
+      else
+        chatChannel = "PARTY"
+      end
+    else
+      chatChannel = "SAY"
+    end
+
+    -- Send the greeting and emote to the appropriate chat channel
+    SendChatMessage(greeting, chatChannel)
 
     -- Perform the emote after a 2 second delay
     local function performEmote()
@@ -54,8 +66,20 @@ button:SetScript("OnMouseUp", function(self, button)
     local goodbye = _G.profiles[_G.currentProfile].goodbyes[math.random(#_G.profiles[_G.currentProfile].goodbyes)]
     local emote = _G.profiles[_G.currentProfile].goodbyeEmotes[math.random(#_G.profiles[_G.currentProfile].goodbyeEmotes)]
 
-    -- Send the goodbye and emote to the say channel
-    SendChatMessage(goodbye, "SAY")
+    -- Determine the appropriate chat channel to use
+    local chatChannel
+    if IsInGroup() then
+      if IsInInstance() then
+        chatChannel = "INSTANCE_CHAT"
+      else
+        chatChannel = "PARTY"
+      end
+    else
+      chatChannel = "SAY"
+    end
+
+    -- Send the goodbye and emote to the appropriate chat channel
+    SendChatMessage(goodbye, chatChannel)
 
     -- Perform the emote after a 2 second delay
     local function performEmote()
