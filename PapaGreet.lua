@@ -1,7 +1,54 @@
--- Includes
 local function Initialize()
-  include("PapaGreetMenu.lua")
+  if not PapaGreetSavedVariables then
+    PapaGreetSavedVariables = {
+      profiles = {
+        ["Default"] = {
+          greetings = {
+            "Hail, champions!",
+            "Greetings, heros!",
+            "Greetings!",
+            "Salutations, adventurers!",
+            "Well met!",
+            "Good evening!"
+          },
+          goodbyes = {
+            "Farewell, champions. May your blade be sharp and your armor strong.",
+            "Until we meet again, heros.",
+            "Safe travels, adventurers.",
+            "Until next time champions!"
+          },
+          greetingEmotes = {
+            "wave",
+            "crack",
+            "cheer",
+            "charge",
+            "brandish",
+            "bow",
+            "hi",
+            "hail",
+            "nod",
+            "grin"
+          },
+          goodbyeEmotes = {
+            "drink",
+            "wave",
+            "cheer",
+            "dance",
+            "hug",
+            "bow",
+            "bye",
+            "nod",
+            "victory",
+            "yay"
+          }
+        }
+      }
+    }
+  end
+  currentProfile = "Default"
 end
+
+Initialize()
 
 -- Create a button with the name "PapaGreetButton"
 local button = CreateFrame("Button", "PapaGreetButton", UIParent, "UIPanelButtonTemplate")
@@ -37,9 +84,8 @@ button:SetScript("OnMouseUp", function(self, button)
   end  
   if button == "LeftButton" then
     -- Choose a random greeting and emote
-    local greeting = _G.profiles[_G.currentProfile].greetings[math.random(#_G.profiles[_G.currentProfile].greetings)]
-    local emote = _G.profiles[_G.currentProfile].greetingEmotes[math.random(#_G.profiles[_G.currentProfile].greetingEmotes)]
-
+    local greeting = PapaGreetSavedVariables.profiles[currentProfile].greetings[math.random(#PapaGreetSavedVariables.profiles[currentProfile].greetings)]
+    local emote = PapaGreetSavedVariables.profiles[currentProfile].greetingEmotes[math.random(#PapaGreetSavedVariables.profiles[currentProfile].greetingEmotes)]
     -- Determine the appropriate chat channel to use
     local chatChannel
     if IsInGroup() then
@@ -63,8 +109,8 @@ button:SetScript("OnMouseUp", function(self, button)
     C_Timer.After(3, performEmote)
   elseif button == "RightButton" then
     -- Choose a random goodbye and emote
-    local goodbye = _G.profiles[_G.currentProfile].goodbyes[math.random(#_G.profiles[_G.currentProfile].goodbyes)]
-    local emote = _G.profiles[_G.currentProfile].goodbyeEmotes[math.random(#_G.profiles[_G.currentProfile].goodbyeEmotes)]
+    local goodbye = PapaGreetSavedVariables.profiles[currentProfile].goodbyes[math.random(#PapaGreetSavedVariables.profiles[currentProfile].goodbyes)]
+    local emote = PapaGreetSavedVariables.profiles[currentProfile].goodbyeEmotes[math.random(#PapaGreetSavedVariables.profiles[currentProfile].goodbyeEmotes)]
 
     -- Determine the appropriate chat channel to use
     local chatChannel
@@ -97,10 +143,5 @@ button:SetScript("OnMouseDown", function(self, button)
   if button == "MiddleButton" then
   -- Move the button when the middle mouse button is held down
   moveButtonOnMiddleMouseDown(self)
-  else
-  -- Perform the left or right button action immediately
-  button:GetScript("OnMouseUp")(self, button)
   end
 end)
-
-Initialize()
