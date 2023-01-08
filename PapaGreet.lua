@@ -5,7 +5,7 @@ local function Initialize()
         ["Default"] = {
           greetings = {
             "Hail, champions!",
-            "Greetings, heros!",
+            "Greetings, heroes!",
             "Greetings!",
             "Salutations, adventurers!",
             "Well met!",
@@ -13,7 +13,7 @@ local function Initialize()
           },
           goodbyes = {
             "Farewell, champions. May your blade be sharp and your armor strong.",
-            "Until we meet again, heros.",
+            "Until we meet again, heroes.",
             "Safe travels, adventurers.",
             "Until next time champions!"
           },
@@ -42,10 +42,11 @@ local function Initialize()
             "yay"
           }
         }
-      }
+      },
+      currentProfile = "Default"
     }
   end
-  currentProfile = "Default"
+  currentProfile = PapaGreetSavedVariables.currentProfile
 end
 
 Initialize()
@@ -79,6 +80,7 @@ end
 
 -- Register the button's OnMouseUp and OnMouseDown events
 button:SetScript("OnMouseUp", function(self, button)
+  currentProfile = PapaGreetSavedVariables.currentProfile
   if IsMouseButtonDown("MiddleButton") then
     return
   end  
@@ -99,15 +101,20 @@ button:SetScript("OnMouseUp", function(self, button)
     end
 
     -- Send the greeting and emote to the appropriate chat channel
-    SendChatMessage(greeting, chatChannel)
-
+    if greeting then
+      SendChatMessage(greeting, chatChannel)
+    end
     -- Perform the emote after a 2 second delay
     local function performEmote()
-      DoEmote(emote)
+      if emote then
+        DoEmote(emote)
+      end
     end
 
     C_Timer.After(3, performEmote)
   elseif button == "RightButton" then
+    
+    local name, instanceType, difficultyID, LfgDungeonID = GetInstanceInfo()
     -- Choose a random goodbye and emote
     local goodbye = PapaGreetSavedVariables.profiles[currentProfile].goodbyes[math.random(#PapaGreetSavedVariables.profiles[currentProfile].goodbyes)]
     local emote = PapaGreetSavedVariables.profiles[currentProfile].goodbyeEmotes[math.random(#PapaGreetSavedVariables.profiles[currentProfile].goodbyeEmotes)]
@@ -118,30 +125,71 @@ button:SetScript("OnMouseUp", function(self, button)
       if IsInInstance() then
         chatChannel = "INSTANCE_CHAT"
       else
-        chatChannel = "PARTY"
+          chatChannel = "PARTY"
       end
     else
       chatChannel = "SAY"
     end
 
     -- Send the goodbye and emote to the appropriate chat channel
-    SendChatMessage(goodbye, chatChannel)
-
+    if goodbye then
+      SendChatMessage(goodbye, chatChannel)
+    end
     -- Perform the emote after a 2 second delay
     local function performEmote()
-      DoEmote(emote)
+      if emote then
+        DoEmote(emote)
+      end
     end
 
     C_Timer.After(3, performEmote)
+
+    local function leaveParty()
+      C_PartyInfo.LeaveParty()
+    end
+    
+    if LfgDungeonID ~= nil then
+      C_Timer.After(8, leaveParty)
+    end
+
   elseif button == "MiddleButton" then
     -- Stop moving the button
     self:StopMovingOrSizing()
   end
 end)
 
-button:SetScript("OnMouseDown", function(self, button)
-  if button == "MiddleButton" then
-  -- Move the button when the middle mouse button is held down
-  moveButtonOnMiddleMouseDown(self)
+  button:SetScript("OnMouseDown", function(self, button)
+    if button == "MiddleButton" then
+      -- Move the button when the middle mouse button is held down
+      moveButtonOnMiddleMouseDown(self)
+    end
+  end)
+
+-- Create the /papa command
+SLASH_PAPA1 = '/papa'
+
+-- Define a function to handle the /papa command
+function SlashCmdList.PAPA(cmd)
+  -- Split the command into arguments
+  local args = {}
+  for word in cmd:gmatch("%w+") do
+    table.insert(args, word)
   end
-end)
+  
+  -- Get the first argument
+  local command = args[1]
+  
+  local menu = 'closed'
+  if command == 'menu' then
+    -- Open the menu
+    ShowPapaGreetMenu()
+  elseif command == 'hide' then
+    -- Hide the icon
+    PapaGreetButton:Hide()
+  elseif command == 'show' then
+    -- Show the icon
+    PapaGreetButton:Show()
+  else
+    print("Usage: /papa menu | hide | show")   
+  end
+end

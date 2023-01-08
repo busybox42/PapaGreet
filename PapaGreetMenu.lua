@@ -5,6 +5,24 @@ function ShowPapaGreetMenu()
   menu:SetSize(350, 300)
   menu:SetPoint("CENTER")
   menu:SetFrameStrata("DIALOG")
+  menu:SetMovable(true)
+
+  -- Set the title of the menu
+  local title = menu:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  title:SetPoint("TOP", menu, "TOP", 0, -5)
+  title:SetText("PapaGreet Menu")  
+
+  -- add mouse event handler
+  menu:SetScript("OnMouseDown", function(self, button)
+    if button == "MiddleButton" then
+        self:StartMoving()
+    end
+  end)
+  menu:SetScript("OnMouseUp", function(self, button)
+      if button == "MiddleButton" then
+          self:StopMovingOrSizing()
+      end
+  end)
 
   -- Create the profiles dropdown menu
   local profileDropdown = CreateFrame("Frame", "PapaGreetProfileDropdown", menu, "UIDropDownMenuTemplate")
@@ -22,6 +40,7 @@ function ShowPapaGreetMenu()
         info.func = function()
             -- Set the current profile when the option is selected
             currentProfile = name
+            PapaGreetSavedVariables.currentProfile = currentProfile
             UIDropDownMenu_SetSelectedValue(profileDropdown, currentProfile)
         end
         UIDropDownMenu_AddButton(info, level)
@@ -34,31 +53,31 @@ function ShowPapaGreetMenu()
   -- Set the current selection for the dropdown menu
   UIDropDownMenu_SetSelectedValue(profileDropdown, currentProfile)
 
--- Create the "Create Profile" button
-local createProfileButton = CreateFrame("Button", "PapaGreetCreateProfileButton", menu, "GameMenuButtonTemplate")
-createProfileButton:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -220, -30)
-createProfileButton:SetSize(120, 27)
-createProfileButton:SetText("Create Profile")
+  -- Create the "Create Profile" button
+  local createProfileButton = CreateFrame("Button", "PapaGreetCreateProfileButton", menu, "GameMenuButtonTemplate")
+  createProfileButton:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -220, -30)
+  createProfileButton:SetSize(120, 27)
+  createProfileButton:SetText("Create Profile")
 
--- Attach a script to the button to handle clicks
-createProfileButton:SetScript("OnClick", function()
+  -- Attach a script to the button to handle clicks
+  createProfileButton:SetScript("OnClick", function()
     -- Show the pop-up window
     StaticPopup_Show("PAPA_GREET_CREATE_PROFILE")
-end)
+  end)
 
--- Create the pop-up window
-StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
-  text = "Enter a name for the new profile:",
-  button1 = "Create",
-  button2 = "Cancel",
-  hasEditBox = 1,
-  timeout = 0,
-  whileDead = 1,
-  hideOnEscape = 1,
-  OnShow = function(self)
+  -- Create the pop-up window
+  StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
+    text = "Enter a name for the new profile:",
+    button1 = "Create",
+    button2 = "Cancel",
+    hasEditBox = 1,
+    timeout = 0,
+    whileDead = 1,
+    hideOnEscape = 1,
+    OnShow = function(self)
       self.editBox:SetText("")
-  end,
-  OnAccept = function(self)
+    end,
+    OnAccept = function(self)
       -- Get the name entered by the user
       local name = self.editBox:GetText()
       
@@ -73,14 +92,14 @@ StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
       -- Update the current profile
       currentProfile = name
       UIDropDownMenu_SetSelectedValue(profileDropdown, currentProfile)
-  end,
-  EditBoxOnEnterPressed = function(self)
+    end,
+    EditBoxOnEnterPressed = function(self)
       StaticPopup_OnClick(self:GetParent(), 1)
-  end,
-  EditBoxOnEscapePressed = function(self)
+    end,
+    EditBoxOnEscapePressed = function(self)
       StaticPopup_OnClick(self:GetParent(), 2)
-  end
-}
+    end
+  }
 
   -- Create the "Delete Profile" button
   local deleteProfileButton = CreateFrame("Button", "PapaGreetDeleteProfileButton", menu, "GameMenuButtonTemplate")
@@ -113,8 +132,72 @@ StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
       PapaGreetSavedVariables.profiles[currentProfile] = nil
 
       -- Update the current profile
-      currentProfile = "Default"
+      currentProfile = PapaGreetSavedVariables.currentProfile
       UIDropDownMenu_SetSelectedValue(profileDropdown, currentProfile)
+    end
+  }
+
+  -- Create the "Copy Profile" button
+  function deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[deepcopy(orig_key)] = deepcopy(orig_value)
+        end
+        setmetatable(copy, deepcopy(getmetatable(orig)))
+    else
+        copy = orig
+    end
+    return copy
+  end
+
+  local copyProfileButton = CreateFrame("Button", "PapaGreetCopyProfileButton", menu, "GameMenuButtonTemplate")
+  copyProfileButton:SetPoint("TOPLEFT", menu, "TOPLEFT", 207, -60)
+  copyProfileButton:SetSize(120, 27)
+  copyProfileButton:SetText("Copy Profile")
+
+  -- Attach a script to the button to handle clicks
+  copyProfileButton:SetScript("OnClick", function()
+    -- Show the pop-up window
+    StaticPopup_Show("PAPA_GREET_COPY_PROFILE")
+  end)  
+
+  -- Create the pop-up window
+  StaticPopupDialogs["PAPA_GREET_COPY_PROFILE"] = {
+    text = "Enter a name for the new profile:",
+    button1 = "Copy",
+    button2 = "Cancel",
+    hasEditBox = 1,
+    timeout = 0,
+    whileDead = 1,
+    hideOnEscape = 1,
+    OnShow = function(self)
+      self.editBox:SetText("")
+    end,
+    OnAccept = function(self)
+      -- Get the name entered by the user
+      local name = self.editBox:GetText()
+      
+      -- Make sure the name is not already in use
+      if PapaGreetSavedVariables.profiles[name] then
+        print("A profile with that name already exists.")
+        return
+      end
+      
+      -- Add the new profile to the saved variables table
+      PapaGreetSavedVariables.profiles[name] = deepcopy(PapaGreetSavedVariables.profiles[currentProfile])
+      
+      -- Update the current profile
+      currentProfile = name
+      UIDropDownMenu_SetSelectedValue(profileDropdown, currentProfile)
+    end,
+    EditBoxOnEnterPressed = function(self)
+      StaticPopup_OnClick(self:GetParent(), 1)
+    end,
+    EditBoxOnEscapePressed = function(self)
+      StaticPopup_OnClick(self:GetParent(), 2)
     end
   }
 
@@ -296,9 +379,9 @@ StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
   end)
 
   -- Create the pop-up window
-  StaticPopupDialogs["PAPA_GREET_DELETE_GREETING_EMOTE"] = {
-    text = "Enter the greeting emote to delete:",
-    button1 = "Delete",
+  StaticPopupDialogs["PAPA_GREET_ADD_GREETING_EMOTE"] = {
+    text = "Enter the greeting emote:",
+    button1 = "Add",
     button2 = "Cancel",
     hasEditBox = 1,
     timeout = 0,
@@ -308,19 +391,11 @@ StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
       self.editBox:SetText("")
     end,
     OnAccept = function(self)
-      -- Get the greeting emote entered by the user
+      -- Get the goodbye emote entered by the user
       local greetingEmote = self.editBox:GetText()
-    
-      -- Get the current greeting emotes for the profile
-      local greetingEmotes = PapaGreetSavedVariables.profiles[currentProfile].greetingEmotes
-    
-      -- Find the index of the greeting emote in the list
-      local index = table.find(greetingEmotes, greetingEmote)
-    
-      -- Remove the greeting emote from the list if it was found
-      if index then
-        table.remove(greetingEmotes, index)
-      end
+  
+      -- Add the goodbye emote to the list for the current profile
+      table.insert(PapaGreetSavedVariables.profiles[currentProfile].greetingEmotes, greetingEmote)
     end,
     EditBoxOnEnterPressed = function(self)
       StaticPopup_OnClick(self:GetParent(), 1)
@@ -399,34 +474,3 @@ StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
   }
 
 end
-
--- Define a function to toggle the menu
-function TogglePapaGreetMenu(menu)
-  -- Toggle the visibility of the menu
-  menu:SetShown(not menu:IsShown())
-end
-
--- Create the menu frame and store it in a global variable
-globalMenu = ShowPapaGreetMenu()
-
--- Register the /papa command to toggle the menu
-SLASH_PAPA1 = "/papa"
-function SlashCmdList.PAPA(msg, editbox)
-  TogglePapaGreetMenu()
-end
-
--- Define a function to toggle the menu
-local menuIsOpen = false
-function TogglePapaGreetMenu()
-  if menuIsOpen then
-    -- Close the menu if it is open
-    PapaGreetMenu:Hide()
-    menuIsOpen = false
-  else
-    -- Open the menu if it is closed
-    PapaGreetMenu:Show()
-    menuIsOpen = true
-  end
-end
-
-PapaGreetMenu:Hide()
