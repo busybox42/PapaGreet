@@ -26,16 +26,16 @@ function ShowPapaGreetMenu()
   end)
 
   -- Define a function to load the saved variables and refresh the menu
-function LoadPapaGreetSavedVariablesAndRefresh()
-  -- Load the saved variables for the current profile
-  PapaGreetSavedVariables = PapaGreetSavedVariables or {}
-  PapaGreetSavedVariables.profiles = PapaGreetSavedVariables.profiles or {}
-  PapaGreetSavedVariables.currentProfile = PapaGreetSavedVariables.currentProfile or DEFAULT_PROFILE
-  currentProfile = PapaGreetSavedVariables.currentProfile
+  function LoadPapaGreetSavedVariablesAndRefresh()
+    -- Load the saved variables for the current profile
+    PapaGreetSavedVariables = PapaGreetSavedVariables or {}
+    PapaGreetSavedVariables.profiles = PapaGreetSavedVariables.profiles or {}
+    PapaGreetSavedVariables.currentProfile = PapaGreetSavedVariables.currentProfile or DEFAULT_PROFILE
+    currentProfile = PapaGreetSavedVariables.currentProfile
 
-  -- Refresh the menu
-  RefreshPapaGreetMenu()
-end
+    -- Refresh the menu
+    RefreshPapaGreetMenu()
+  end
   -- Create the profiles dropdown menu
   local profileDropdown = CreateFrame("Frame", "PapaGreetProfileDropdown", menu, "UIDropDownMenuTemplate")
   profileDropdown:SetPoint("TOPLEFT", menu, "TOPLEFT", 190, -30)

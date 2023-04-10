@@ -168,6 +168,9 @@ button:SetScript("OnMouseUp", function(self, button)
   elseif button == "MiddleButton" then
     -- Stop moving the button
     self:StopMovingOrSizing()
+  elseif button == "RightButton" and IsShiftKeyDown() then
+    -- Shift-right click opens the Dungeon Finder
+    PVEFrame_ToggleFrame()
   end
 end)
 
