@@ -3,6 +3,7 @@
 ## Author: Alan Denniston but Technically OpenAI
 ## Version: 1.0.4
 ## Interface: 30403
+## X-Interface: 30403
 ## SavedVariablesPerCharacter: PapaGreetSavedVariables
 
 PapaGreet.lua
