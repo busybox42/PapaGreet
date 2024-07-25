@@ -2,8 +2,8 @@
 ## Notes: A simple greeting addon
 ## Author: Alan Denniston but Technically OpenAI
 ## Version: 1.0.6
-## Interface: 100200
-## X-Interface: 100200
+## Interface: 110000, 110002
+## X-Interface: 110000
 ## SavedVariablesPerCharacter: PapaGreetSavedVariables
 
 PapaGreet.lua
