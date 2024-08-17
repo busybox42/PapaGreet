@@ -61,9 +61,9 @@ button:SetAttribute("action", 1)
 
 -- Set the size and text of the button
 button:SetSize(40, 40)
-button:SetNormalTexture(GetSpellTexture(226582))
-button:SetPushedTexture(GetSpellTexture(226582))
-button:SetDisabledTexture(GetSpellTexture(226582))
+button:SetNormalTexture(C_Spell.GetSpellTexture(226582))
+button:SetPushedTexture(C_Spell.GetSpellTexture(226582))
+button:SetDisabledTexture(C_Spell.GetSpellTexture(226582))
 
 -- Position the button in the center of the screen
 button:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
