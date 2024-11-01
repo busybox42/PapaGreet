@@ -1,211 +1,215 @@
+-- PapaGreet.lua
+
+local CreateFrame = CreateFrame
+local UIParent = UIParent
+local math_random = math.random
+local SendChatMessage = SendChatMessage
+local IsInGroup = IsInGroup
+local IsInInstance = IsInInstance
+local DoEmote = DoEmote
+local C_Timer_NewTimer = C_Timer.NewTimer
+local C_PartyInfo_LeaveParty = C_PartyInfo.LeaveParty
+local GetInstanceInfo = GetInstanceInfo
+local ToggleLFDParentFrame = ToggleLFDParentFrame
+local TogglePVPUI = TogglePVPUI
+local PVEFrame_ToggleFrame = PVEFrame_ToggleFrame
+local IsShiftKeyDown = IsShiftKeyDown
+local IsControlKeyDown = IsControlKeyDown
+local print = print
+
+-- Constants
+local DEFAULT_PROFILE = "Default"
+local SPELL_ID = 226582
+local BUTTON_SIZE = 40
+local BUTTON_STRATA = "HIGH"
+local BUTTON_ALPHA = 1
+local SLASH_COMMAND = '/papa'
+
+-- Initialize saved variables
 local function Initialize()
-  if not PapaGreetSavedVariables then
-    PapaGreetSavedVariables = {
-      profiles = {
-        ["Default"] = {
-          greetings = {
-            "Hail, champions!",
-            "Greetings, heroes!",
-            "Greetings!",
-            "Salutations, adventurers!",
-            "Well met!",
-            "Good evening!"
-          },
-          goodbyes = {
-            "Farewell, champions. May your blade be sharp and your armor strong.",
-            "Until we meet again, heroes.",
-            "Safe travels, adventurers.",
-            "Until next time champions!"
-          },
-          greetingEmotes = {
-            "wave",
-            "crack",
-            "cheer",
-            "charge",
-            "brandish",
-            "bow",
-            "hi",
-            "hail",
-            "nod",
-            "grin"
-          },
-          goodbyeEmotes = {
-            "drink",
-            "wave",
-            "cheer",
-            "dance",
-            "hug",
-            "bow",
-            "bye",
-            "nod",
-            "victory",
-            "yay"
-          },
-          castBuff = "true",
-          delayEmote = 3,
-          delayLeave = 8,
+    if not PapaGreetSavedVariables then
+        PapaGreetSavedVariables = {
+            profiles = {
+                [DEFAULT_PROFILE] = {
+                    greetings = {
+                        "Hail, champions!",
+                        "Greetings, heroes!",
+                        "Greetings!",
+                        "Salutations, adventurers!",
+                        "Well met!",
+                        "Good evening!"
+                    },
+                    goodbyes = {
+                        "Farewell, champions. May your blade be sharp and your armor strong.",
+                        "Until we meet again, heroes.",
+                        "Safe travels, adventurers.",
+                        "Until next time champions!"
+                    },
+                    greetingEmotes = {
+                        "wave", "crack", "cheer", "charge", "brandish",
+                        "bow", "hi", "hail", "nod", "grin"
+                    },
+                    goodbyeEmotes = {
+                        "drink", "wave", "cheer", "dance", "hug",
+                        "bow", "bye", "nod", "victory", "yay"
+                    },
+                    delayEmote = 3,
+                    delayLeave = 8,
+                }
+            },
+            currentProfile = DEFAULT_PROFILE
         }
-      },
-      currentProfile = "Default"
-    }
-  end
-  currentProfile = PapaGreetSavedVariables.currentProfile
+    end
+    return PapaGreetSavedVariables.currentProfile
 end
 
-Initialize()
+local currentProfile = Initialize()
 
--- Create a button with the name "PapaGreetButton"
-local button = CreateFrame("Button", "PapaGreetButton", UIParent, "UIPanelButtonTemplate")
-button:SetAttribute("type", "action")
-button:SetAttribute("action", 1)
-
--- Set the size and text of the button
-button:SetSize(40, 40)
-button:SetNormalTexture(C_Spell.GetSpellTexture(226582))
-button:SetPushedTexture(C_Spell.GetSpellTexture(226582))
-button:SetDisabledTexture(C_Spell.GetSpellTexture(226582))
-
--- Position the button in the center of the screen
-button:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-
--- Make the button movable, allow it to be moved off the screen, and ensure it is displayed above other frames
-button:SetClampedToScreen(false)
-button:SetMovable(true)
-button:SetFrameStrata("HIGH")
-button:SetAlpha(1)
-
--- Show the button
-button:Show()
-
--- Define a function for moving the button when the middle mouse button is held down
-local function moveButtonOnMiddleMouseDown(self)
-  -- Start moving the button
-  self:StartMoving()
+-- Helper functions
+local function GetProfile()
+    return PapaGreetSavedVariables.profiles[currentProfile]
 end
 
--- Register the button's OnMouseUp and OnMouseDown events
-button:SetScript("OnMouseUp", function(self, button)
-  currentProfile = PapaGreetSavedVariables.currentProfile
-  if IsMouseButtonDown("MiddleButton") then
-    return
-  end
-  if button == "LeftButton" and IsShiftKeyDown() then
-    ToggleLFDParentFrame()
-  elseif button == "LeftButton" and IsControlKeyDown() then
-    TogglePapaGreetMenu()
-  elseif button == "RightButton" and IsShiftKeyDown() then
-    TogglePVPUI()
-  elseif button == "LeftButton" then
-    -- Choose a random greeting and emote
-    local greeting = PapaGreetSavedVariables.profiles[currentProfile].greetings[math.random(#PapaGreetSavedVariables.profiles[currentProfile].greetings)]
-    local emote = PapaGreetSavedVariables.profiles[currentProfile].greetingEmotes[math.random(#PapaGreetSavedVariables.profiles[currentProfile].greetingEmotes)]
-    -- Determine the appropriate chat channel to use
-    local chatChannel
+local function DetermineChatChannel()
     if IsInGroup() then
-      if IsInInstance() then
-        chatChannel = "INSTANCE_CHAT"
-      else
-        chatChannel = "PARTY"
-      end
+        return IsInInstance() and "INSTANCE_CHAT" or "PARTY"
     else
-      chatChannel = "SAY"
+        return "SAY"
     end
+end
 
-    -- Send the greeting and emote to the appropriate chat channel
-    if greeting then
-      SendChatMessage(greeting, chatChannel)
+local function SendMessageAndEmote(message, emote, delayEmote)
+    if message then
+        SendChatMessage(message, DetermineChatChannel())
     end
-
-    -- Perform the emote after a 2 second delay
-    local function performEmote()
-      if emote then
-        DoEmote(emote)
-      end
-    end
-
-    C_Timer.After(math.floor(PapaGreetSavedVariables.profiles[currentProfile].delayEmote), performEmote)
-
-  elseif button == "RightButton" then
-
-    local name, instanceType, difficultyID, LfgDungeonID = GetInstanceInfo()
-    -- Choose a random goodbye and emote
-    local goodbye = PapaGreetSavedVariables.profiles[currentProfile].goodbyes[math.random(#PapaGreetSavedVariables.profiles[currentProfile].goodbyes)]
-    local emote = PapaGreetSavedVariables.profiles[currentProfile].goodbyeEmotes[math.random(#PapaGreetSavedVariables.profiles[currentProfile].goodbyeEmotes)]
-
-    -- Determine the appropriate chat channel to use
-    local chatChannel
-    if IsInGroup() then
-      if IsInInstance() then
-        chatChannel = "INSTANCE_CHAT"
-      else
-          chatChannel = "PARTY"
-      end
+    if emote then
+        C_Timer_NewTimer(delayEmote, function() DoEmote(emote) end)
     else
-      chatChannel = "SAY"
-    end
-
-    -- Send the goodbye and emote to the appropriate chat channel
-    if goodbye then
-      SendChatMessage(goodbye, chatChannel)
-    end
-    -- Perform the emote after a 2 second delay
-    local function performEmote()
-      if emote then
         DoEmote(emote)
-      end
+    end
+end
+
+local leaveTimer
+local leaveTimerActive = false
+
+local function HandleGreeting()
+    local profile = GetProfile()
+    -- Proceed with greeting message and emote
+    local greeting = profile.greetings[math_random(#profile.greetings)]
+    local emote = profile.greetingEmotes[math_random(#profile.greetingEmotes)]
+    SendMessageAndEmote(greeting, emote, profile.delayEmote)
+end
+
+local function HandleGoodbye()
+    local profile = GetProfile()
+    local goodbye = profile.goodbyes[math_random(#profile.goodbyes)]
+    local emote = profile.goodbyeEmotes[math_random(#profile.goodbyeEmotes)]
+    SendMessageAndEmote(goodbye, emote, profile.delayEmote)
+    
+    -- Start the leave timer
+    leaveTimerActive = true
+    leaveTimer = C_Timer_NewTimer(profile.delayLeave, function()
+                if leaveTimerActive then
+            if IsInGroup() then
+                C_PartyInfo_LeaveParty()
+                UIErrorsFrame:AddMessage("You have left the group.", 1.0, 1.0, 0.0)
+            else
+                UIErrorsFrame:AddMessage("You are not in a group.", 1.0, 1.0, 0.0)
+            end
+            leaveTimerActive = false
+            leaveTimer = nil
+        end
+    end)
     end
 
-    C_Timer.After(math.floor(PapaGreetSavedVariables.profiles[currentProfile].delayEmote), performEmote)
+local function CancelLeave()
+        if leaveTimerActive and leaveTimer then
+        leaveTimerActive = false
+        leaveTimer:Cancel()
+        leaveTimer = nil
+                UIErrorsFrame:AddMessage("Leave group action has been canceled.", 1.0, 1.0, 0.0)
+    else
+                UIErrorsFrame:AddMessage("No active leave action to cancel.", 1.0, 1.0, 0.0)
+    end
+end
 
-    local function leaveParty()
-      C_PartyInfo.LeaveParty()
+local function OnButtonClick(self, button)
+    if button == "LeftButton" then
+        if IsShiftKeyDown() then
+            ToggleLFDParentFrame()
+        elseif IsControlKeyDown() then
+            TogglePapaGreetMenu()
+        else
+            HandleGreeting()
+        end
+    elseif button == "RightButton" then
+        if IsShiftKeyDown() then
+            TogglePVPUI()
+        elseif IsControlKeyDown() then
+            -- Cancel leave if Control + Right Click
+            CancelLeave()
+        else
+            HandleGoodbye()
+        end
+    end
+end
+
+-- Create the main button
+local function CreatePapaGreetButton()
+    local button = CreateFrame("Button", "PapaGreetButton", UIParent, "UIPanelButtonTemplate")
+    button:SetSize(BUTTON_SIZE, BUTTON_SIZE)
+
+    local spellTexture = C_Spell.GetSpellTexture(SPELL_ID)
+    local texture = spellTexture or "Interface\\Icons\\INV_Misc_QuestionMark"
+    button:SetNormalTexture(texture)
+    button:SetPushedTexture(texture)
+    button:SetDisabledTexture(texture)
+
+    button:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    button:SetClampedToScreen(false)
+    button:SetMovable(true)
+    button:SetFrameStrata(BUTTON_STRATA)
+    button:SetAlpha(BUTTON_ALPHA)
+    button:EnableMouse(true)
+    button:RegisterForClicks("AnyUp")
+    button:Show()
+
+    button:SetScript("OnMouseDown", function(self, button)
+        if button == "MiddleButton" then
+            self:StartMoving()
+        end
+    end)
+
+    button:SetScript("OnMouseUp", function(self, button)
+        if button == "MiddleButton" then
+            self:StopMovingOrSizing()
+            return
+        end
+        OnButtonClick(self, button)
+    end)
+
+    return button
+end
+
+local papaGreetButton = CreatePapaGreetButton()
+
+-- Slash command handling
+SLASH_PAPA1 = SLASH_PAPA1 or '/papa'
+
+SlashCmdList["PAPA"] = function(cmd)
+    local command = cmd:match("^%S+")
+    if not command then
+        print("Usage: /papa menu | hide | show")
+        return
     end
 
-    if LfgDungeonID ~= nil then
-      C_Timer.After(math.floor(PapaGreetSavedVariables.profiles[currentProfile].delayLeave), leaveParty)
+    if command == "menu" then
+        TogglePapaGreetMenu()
+    elseif command == "hide" then
+        papaGreetButton:Hide()
+    elseif command == "show" then
+        papaGreetButton:Show()
+    else
+        print("Usage: /papa menu | hide | show")
     end
-
-  elseif button == "MiddleButton" then
-    -- Stop moving the button
-    self:StopMovingOrSizing()
-  elseif button == "RightButton" and IsShiftKeyDown() then
-    -- Shift-right click opens the Dungeon Finder
-    PVEFrame_ToggleFrame()
-  end
-end)
-
-button:SetScript("OnMouseDown", function(self, button)
-  if button == "MiddleButton" then
-    -- Move the button when the middle mouse button is held down
-    moveButtonOnMiddleMouseDown(self)
-  end
-end)
-
--- Create the /papa command
-SLASH_PAPA1 = '/papa'
-
--- Define a function to handle the /papa command
-function SlashCmdList.PAPA(cmd)
-  -- Split the command into arguments
-  local args = {}
-  for word in cmd:gmatch("%w+") do
-    table.insert(args, word)
-  end
-
-  -- Get the first argument
-  local command = args[1]
-
-  local menu = 'closed'
-  if command == 'menu' then
-    -- Open the menu
-    TogglePapaGreetMenu()
-  elseif command == 'hide' then
-    -- Hide the icon
-    PapaGreetButton:Hide()
-  elseif command == 'show' then
-    -- Show the icon
-    PapaGreetButton:Show()
-  else
-    print("Usage: /papa menu | hide | show")
-  end
 end
