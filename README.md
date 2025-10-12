@@ -1,6 +1,6 @@
 # PapaGreet
 
-PapaGreet is a simple World of Warcraft addon that allows players to greet and bid farewell to other players in the game.
+PapaGreet is a World of Warcraft addon that automates greetings and farewells in groups with customizable messages and emotes.
 
 ## Installation
 
@@ -12,11 +12,54 @@ To install PapaGreet, follow these steps:
 
 ## Usage
 
-PapaGreet adds a button to the center of the screen. Left clicking the button will send a random greeting and emote to the say channel, and right clicking the button will send a random goodbye and emote to the say channel.
+PapaGreet adds a movable button to your screen with the following controls:
 
-The greeting and goodbye messages, as well as the corresponding emotes, can be customized through the PapaGreet menu. To access the menu, right click the PapaGreet button. From the menu, you can choose from different sets of greeting and goodbye messages and emotes, or create your own custom set.
+### Button Controls
 
-The PapaGreet button can be moved by holding down the middle mouse button and released by letting go of the middle mouse button.
+- **Left Click**: Send a random greeting and emote
+- **Right Click**: Send a random goodbye, emote, and leave the group after a delay
+- **Ctrl+Left Click**: Open the settings menu
+- **Ctrl+Right Click**: Cancel the pending leave group action
+- **Shift+Left Click**: Open the LFD (Dungeon Finder) interface
+- **Shift+Right Click**: Open the PVP interface
+- **Middle Mouse Drag**: Move the button (position is saved)
+
+### Chat Channels
+
+Messages are automatically sent to the appropriate channel:
+- **Party**: When in a dungeon/raid group
+- **Instance Chat**: When in instanced content
+- **Say**: When solo
+
+### Settings Menu
+
+Access the settings menu with **Ctrl+Left Click** or the `/papa menu` command.
+
+From the menu you can:
+- Create, delete, and copy profiles
+- Add/remove custom greetings and goodbyes
+- Add/remove custom emotes for greetings and goodbyes
+- Adjust emote delay (time between message and emote)
+- Adjust leave delay (time between goodbye and leaving group)
+
+### Slash Commands
+
+- `/papa menu` - Toggle the settings menu
+- `/papa show` - Show the button
+- `/papa hide` - Hide the button
+
+### Keybindings
+
+PapaGreet supports custom keybindings that can be configured in the WoW keybinding menu (ESC → Keybinds → PapaGreet):
+
+- **Send Greeting** - Trigger a greeting without clicking the button
+- **Send Goodbye & Leave** - Trigger goodbye and leave timer without clicking
+- **Cancel Leave** - Cancel the pending leave action
+- **Toggle Menu** - Open/close the settings menu
+
+### Visual Countdown
+
+When you trigger a goodbye, a countdown timer appears on the button showing seconds remaining before auto-leaving the group. This gives you a clear visual indicator and time to cancel if needed.
 
 ## License
 
