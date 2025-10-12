@@ -61,6 +61,14 @@ PapaGreet supports custom keybindings that can be configured in the WoW keybindi
 
 When you trigger a goodbye, a countdown timer appears on the button showing seconds remaining before auto-leaving the group. This gives you a clear visual indicator and time to cancel if needed.
 
+### Combat-Safe Queueing
+
+If you try to send a greeting while in combat, it will be automatically queued and sent when you leave combat. You'll see a notification that the greeting was queued, and another when it's sent after combat ends.
+
+### Future-Proof Architecture
+
+PapaGreet includes an API abstraction layer that automatically detects and uses newer WoW APIs when available (like those coming in the Midnight expansion), while falling back gracefully to current APIs on older versions. This ensures the addon will work seamlessly across WoW updates.
+
 ## License
 
 PapaGreet is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

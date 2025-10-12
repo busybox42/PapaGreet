@@ -1,14 +1,60 @@
 -- PapaGreet.lua
 
+-- API Abstraction Layer (future-proof for Midnight)
+local PapaGreetAPI = {}
+
+-- Safe error handler wrapper
+local function SafeCall(func, ...)
+    local success, result = xpcall(func, geterrorhandler(), ...)
+    if not success then
+        print("|cffff0000PapaGreet Error:|r " .. tostring(result))
+    end
+    return success, result
+end
+
+-- Initialize API layer with version detection
+function PapaGreetAPI:Initialize()
+    local apiVersion = select(4, GetBuildInfo())
+    self.isMidnight = apiVersion >= 120000
+    self.isModern = apiVersion >= 100000
+    
+    -- Chat API
+    self.SendChatMessage = function(msg, channel)
+        SafeCall(SendChatMessage, msg, channel)
+    end
+    
+    -- Emote API (ready for C_Emote in Midnight)
+    if C_Emote and C_Emote.DoEmote then
+        self.DoEmote = function(emote)
+            SafeCall(C_Emote.DoEmote, emote)
+        end
+    else
+        self.DoEmote = function(emote)
+            SafeCall(DoEmote, emote)
+        end
+    end
+    
+    -- Party API
+    if C_PartyInfo and C_PartyInfo.LeaveParty then
+        self.LeaveParty = function()
+            SafeCall(C_PartyInfo.LeaveParty)
+        end
+    else
+        self.LeaveParty = function()
+            SafeCall(LeaveGroup)
+        end
+    end
+end
+
+PapaGreetAPI:Initialize()
+
+-- Localize globals for performance
 local CreateFrame = CreateFrame
 local UIParent = UIParent
 local math_random = math.random
-local SendChatMessage = SendChatMessage
 local IsInGroup = IsInGroup
 local IsInInstance = IsInInstance
-local DoEmote = DoEmote
-local C_Timer_NewTimer = C_Timer.NewTimer
-local C_PartyInfo_LeaveParty = C_PartyInfo.LeaveParty
+local InCombatLockdown = InCombatLockdown
 local GetInstanceInfo = GetInstanceInfo
 local ToggleLFDParentFrame = ToggleLFDParentFrame
 local TogglePVPUI = TogglePVPUI
@@ -83,12 +129,62 @@ local function DetermineChatChannel()
     end
 end
 
+-- Combat-safe greeting queue system
+local greetingQueue = {}
+
+local function ProcessGreetingQueue()
+    if #greetingQueue > 0 then
+        for i, queuedGreeting in ipairs(greetingQueue) do
+            PapaGreetAPI.SendChatMessage(queuedGreeting.message, queuedGreeting.channel)
+            if queuedGreeting.emote then
+                C_Timer.After(queuedGreeting.delayEmote, function()
+                    PapaGreetAPI.DoEmote(queuedGreeting.emote)
+                end)
+            end
+        end
+        wipe(greetingQueue)
+        UIErrorsFrame:AddMessage("Queued greetings sent!", 0.0, 1.0, 0.0)
+    end
+end
+
+-- Modern event system support (EventRegistry for retail 10+, fallback for older clients)
+if EventRegistry then
+    -- Use modern EventRegistry API
+    EventRegistry:RegisterCallback("PLAYER_REGEN_ENABLED", ProcessGreetingQueue)
+else
+    -- Fallback to traditional event system
+    local combatEventFrame = CreateFrame("Frame")
+    combatEventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    combatEventFrame:SetScript("OnEvent", function(self, event)
+        if event == "PLAYER_REGEN_ENABLED" then
+            ProcessGreetingQueue()
+        end
+    end)
+end
+
 local function SendMessageAndEmote(message, emote, delayEmote)
+    local channel = DetermineChatChannel()
+    
+    -- Check if in combat
+    if InCombatLockdown() then
+        table.insert(greetingQueue, {
+            message = message,
+            channel = channel,
+            emote = emote,
+            delayEmote = delayEmote or 3
+        })
+        UIErrorsFrame:AddMessage("Greeting queued (in combat)", 1.0, 1.0, 0.0)
+        return
+    end
+    
+    -- Send immediately if not in combat
     if message then
-        pcall(SendChatMessage, message, DetermineChatChannel())
+        PapaGreetAPI.SendChatMessage(message, channel)
     end
     if emote then
-        C_Timer_NewTimer(delayEmote, function() pcall(DoEmote, emote) end)
+        C_Timer.After(delayEmote, function()
+            PapaGreetAPI.DoEmote(emote)
+        end)
     end
 end
 
@@ -162,10 +258,10 @@ local function HandleGoodbye()
     UpdateLeaveCountdown()
     
     -- Final action timer
-    leaveTimer = C_Timer_NewTimer(profile.delayLeave, function()
+    leaveTimer = C_Timer.NewTimer(profile.delayLeave, function()
         if leaveTimerActive then
             if IsInGroup() then
-                C_PartyInfo_LeaveParty()
+                PapaGreetAPI.LeaveParty()
                 UIErrorsFrame:AddMessage("You have left the group.", 1.0, 1.0, 0.0)
             else
                 UIErrorsFrame:AddMessage("You are not in a group.", 1.0, 1.0, 0.0)
