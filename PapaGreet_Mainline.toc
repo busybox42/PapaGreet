@@ -1,7 +1,7 @@
 ## Title: PapaGreet
 ## Notes: A simple greeting addon
 ## Author: Alan Denniston
-## Version: 1.1.0
+## Version: 1.1.1
 ## Interface: 111007
 ## SavedVariablesPerCharacter: PapaGreetSavedVariables
 
