@@ -1,9 +1,8 @@
 ## Title: PapaGreet
 ## Notes: A simple greeting addon
-## Author: Alan Denniston but Technically OpenAI
+## Author: Alan Denniston 
 ## Version: 1.1.0
-## Interface: 40400
-## X-Interface: 40400
+## Interface: 40402
 ## SavedVariablesPerCharacter: PapaGreetSavedVariables
 
 Bindings.xml
