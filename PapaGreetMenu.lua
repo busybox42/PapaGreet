@@ -110,8 +110,13 @@ local function createButton(name, parent, point, offsetX, offsetY, width, height
             UIErrorsFrame:AddMessage("Cannot modify Default profile. Create a new profile first.", 1.0, 0.0, 0.0)
             return
         end
-        if popup then 
-            StaticPopup_Show(popup)
+        if popup then
+            print("PapaGreet: Showing popup: " .. popup)
+            if StaticPopupDialogs[popup] then
+                StaticPopup_Show(popup)
+            else
+                print("PapaGreet Error: Popup " .. popup .. " not found!")
+            end
         end
     end)
     return btn
