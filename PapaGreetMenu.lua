@@ -128,6 +128,208 @@ local function createDeleteDropdown(name, parent, point, offsetX, offsetY, width
     end)
 end
 
+-- Define Static Popups (must be defined before ShowPapaGreetMenu)
+StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
+    text = "Enter the name for the new profile:",
+    button1 = "Create",
+    button2 = "Cancel",
+    hasEditBox = true,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    OnShow = function(self)
+        self.editBox:SetText("")
+    end,
+    OnAccept = function(self)
+        local profileName = sanitizeInput(self.editBox:GetText(), MAX_PROFILE_NAME_LENGTH)
+        if profileName then
+            if PapaGreetSavedVariables.profiles[profileName] then
+                print("Profile '" .. profileName .. "' already exists.")
+            else
+                PapaGreetSavedVariables.profiles[profileName] = deepcopy(PapaGreetSavedVariables.profiles[currentProfile])
+                currentProfile = profileName
+                PapaGreetSavedVariables.currentProfile = currentProfile
+                RefreshPapaGreetMenu()
+                print("Profile '" .. profileName .. "' created.")
+            end
+        else
+            print("Profile name cannot be empty or contain only whitespace.")
+        end
+    end,
+    EditBoxOnEnterPressed = function(self)
+        StaticPopup_OnClick(self:GetParent(), 1)
+    end,
+    EditBoxOnEscapePressed = function(self)
+        StaticPopup_OnClick(self:GetParent(), 2)
+    end
+}
+
+StaticPopupDialogs["PAPA_GREET_DELETE_PROFILE"] = {
+    text = "Are you sure you want to delete the current profile?",
+    button1 = "Delete",
+    button2 = "Cancel",
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    OnAccept = function(self)
+        if currentProfile == DEFAULT_PROFILE then
+            print("Cannot delete the Default profile.")
+            return
+        end
+        local deletedProfile = currentProfile
+        PapaGreetSavedVariables.profiles[currentProfile] = nil
+        currentProfile = DEFAULT_PROFILE
+        PapaGreetSavedVariables.currentProfile = currentProfile
+        RefreshPapaGreetMenu()
+        print("Profile '" .. deletedProfile .. "' deleted.")
+    end
+}
+
+StaticPopupDialogs["PAPA_GREET_COPY_PROFILE"] = {
+    text = "Enter the name for the copied profile:",
+    button1 = "Copy",
+    button2 = "Cancel",
+    hasEditBox = true,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    OnShow = function(self)
+        self.editBox:SetText(currentProfile .. " Copy")
+    end,
+    OnAccept = function(self)
+        local profileName = sanitizeInput(self.editBox:GetText(), MAX_PROFILE_NAME_LENGTH)
+        if profileName then
+            if PapaGreetSavedVariables.profiles[profileName] then
+                print("Profile '" .. profileName .. "' already exists.")
+            else
+                PapaGreetSavedVariables.profiles[profileName] = deepcopy(PapaGreetSavedVariables.profiles[currentProfile])
+                print("Profile '" .. profileName .. "' created as a copy of '" .. currentProfile .. "'.")
+                RefreshPapaGreetMenu()
+            end
+        else
+            print("Profile name cannot be empty or contain only whitespace.")
+        end
+    end,
+    EditBoxOnEnterPressed = function(self)
+        StaticPopup_OnClick(self:GetParent(), 1)
+    end,
+    EditBoxOnEscapePressed = function(self)
+        StaticPopup_OnClick(self:GetParent(), 2)
+    end
+}
+
+StaticPopupDialogs["PAPA_GREET_ADD_GREETING"] = {
+    text = "Enter the greeting message:",
+    button1 = "Add",
+    button2 = "Cancel",
+    hasEditBox = true,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    OnShow = function(self)
+        self.editBox:SetText("")
+    end,
+    OnAccept = function(self)
+        local greeting = sanitizeInput(self.editBox:GetText(), MAX_MESSAGE_LENGTH)
+        if greeting then
+            table_insert(PapaGreetSavedVariables.profiles[currentProfile].greetings, greeting)
+            RefreshPapaGreetMenu()
+        else
+            print("Greeting cannot be empty or contain only whitespace.")
+        end
+    end,
+    EditBoxOnEnterPressed = function(self)
+        StaticPopup_OnClick(self:GetParent(), 1)
+    end,
+    EditBoxOnEscapePressed = function(self)
+        StaticPopup_OnClick(self:GetParent(), 2)
+    end
+}
+
+StaticPopupDialogs["PAPA_GREET_ADD_GOODBYE"] = {
+    text = "Enter the goodbye message:",
+    button1 = "Add",
+    button2 = "Cancel",
+    hasEditBox = true,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    OnShow = function(self)
+        self.editBox:SetText("")
+    end,
+    OnAccept = function(self)
+        local goodbye = sanitizeInput(self.editBox:GetText(), MAX_MESSAGE_LENGTH)
+        if goodbye then
+            table_insert(PapaGreetSavedVariables.profiles[currentProfile].goodbyes, goodbye)
+            RefreshPapaGreetMenu()
+        else
+            print("Goodbye cannot be empty or contain only whitespace.")
+        end
+    end,
+    EditBoxOnEnterPressed = function(self)
+        StaticPopup_OnClick(self:GetParent(), 1)
+    end,
+    EditBoxOnEscapePressed = function(self)
+        StaticPopup_OnClick(self:GetParent(), 2)
+    end
+}
+
+StaticPopupDialogs["PAPA_GREET_ADD_GREETING_EMOTE"] = {
+    text = "Enter the greeting emote:",
+    button1 = "Add",
+    button2 = "Cancel",
+    hasEditBox = true,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    OnShow = function(self)
+        self.editBox:SetText("")
+    end,
+    OnAccept = function(self)
+        local emote = sanitizeInput(self.editBox:GetText(), MAX_EMOTE_LENGTH)
+        if emote then
+            table_insert(PapaGreetSavedVariables.profiles[currentProfile].greetingEmotes, emote)
+            RefreshPapaGreetMenu()
+        else
+            print("Greeting emote cannot be empty or contain only whitespace.")
+        end
+    end,
+    EditBoxOnEnterPressed = function(self)
+        StaticPopup_OnClick(self:GetParent(), 1)
+    end,
+    EditBoxOnEscapePressed = function(self)
+        StaticPopup_OnClick(self:GetParent(), 2)
+    end
+}
+
+StaticPopupDialogs["PAPA_GREET_ADD_GOODBYE_EMOTE"] = {
+    text = "Enter the goodbye emote:",
+    button1 = "Add",
+    button2 = "Cancel",
+    hasEditBox = true,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    OnShow = function(self)
+        self.editBox:SetText("")
+    end,
+    OnAccept = function(self)
+        local emote = sanitizeInput(self.editBox:GetText(), MAX_EMOTE_LENGTH)
+        if emote then
+            table_insert(PapaGreetSavedVariables.profiles[currentProfile].goodbyeEmotes, emote)
+            RefreshPapaGreetMenu()
+        else
+            print("Goodbye emote cannot be empty or contain only whitespace.")
+        end
+    end,
+    EditBoxOnEnterPressed = function(self)
+        StaticPopup_OnClick(self:GetParent(), 1)
+    end,
+    EditBoxOnEscapePressed = function(self)
+        StaticPopup_OnClick(self:GetParent(), 2)
+    end
+}
+
 -- Show the menu
 function ShowPapaGreetMenu()
     -- Reuse existing frame if it exists
@@ -228,209 +430,6 @@ function ShowPapaGreetMenu()
     -- Create Add Goodbye Emote Button and Delete Goodbye Emote Dropdown
     createButton("PapaGreetAddGoodbyeEmoteButton", menu, "TOPLEFT", 20, -360, 140, 27, "Add Goodbye Emote", "PAPA_GREET_ADD_GOODBYE_EMOTE")
     createDeleteDropdown("PapaGreetDeleteGoodbyeEmoteDropdown", menu, "TOPLEFT", 180, -360, 140, "goodbyeEmotes")
-
-    -- Define Static Popups for Profile Management
-    StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
-        text = "Enter the name for the new profile:",
-        button1 = "Create",
-        button2 = "Cancel",
-        hasEditBox = true,
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-        OnShow = function(self)
-            self.editBox:SetText("")
-        end,
-        OnAccept = function(self)
-            local profileName = sanitizeInput(self.editBox:GetText(), MAX_PROFILE_NAME_LENGTH)
-            if profileName then
-                if PapaGreetSavedVariables.profiles[profileName] then
-                    print("Profile '" .. profileName .. "' already exists.")
-                else
-                    PapaGreetSavedVariables.profiles[profileName] = deepcopy(PapaGreetSavedVariables.profiles[currentProfile])
-                    currentProfile = profileName
-                    PapaGreetSavedVariables.currentProfile = currentProfile
-                    RefreshPapaGreetMenu()
-                    print("Profile '" .. profileName .. "' created.")
-                end
-            else
-                print("Profile name cannot be empty or contain only whitespace.")
-            end
-        end,
-        EditBoxOnEnterPressed = function(self)
-            StaticPopup_OnClick(self:GetParent(), 1)
-        end,
-        EditBoxOnEscapePressed = function(self)
-            StaticPopup_OnClick(self:GetParent(), 2)
-        end
-    }
-
-    StaticPopupDialogs["PAPA_GREET_DELETE_PROFILE"] = {
-        text = "Are you sure you want to delete the current profile?",
-        button1 = "Delete",
-        button2 = "Cancel",
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-        OnAccept = function(self)
-            if currentProfile == DEFAULT_PROFILE then
-                print("Cannot delete the Default profile.")
-                return
-            end
-            local deletedProfile = currentProfile
-            PapaGreetSavedVariables.profiles[currentProfile] = nil
-            currentProfile = DEFAULT_PROFILE
-            PapaGreetSavedVariables.currentProfile = currentProfile
-            RefreshPapaGreetMenu()
-            print("Profile '" .. deletedProfile .. "' deleted.")
-        end
-    }
-
-    StaticPopupDialogs["PAPA_GREET_COPY_PROFILE"] = {
-        text = "Enter the name for the copied profile:",
-        button1 = "Copy",
-        button2 = "Cancel",
-        hasEditBox = true,
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-        OnShow = function(self)
-            self.editBox:SetText(currentProfile .. " Copy")
-        end,
-        OnAccept = function(self)
-            local profileName = sanitizeInput(self.editBox:GetText(), MAX_PROFILE_NAME_LENGTH)
-            if profileName then
-                if PapaGreetSavedVariables.profiles[profileName] then
-                    print("Profile '" .. profileName .. "' already exists.")
-                else
-                    PapaGreetSavedVariables.profiles[profileName] = deepcopy(PapaGreetSavedVariables.profiles[currentProfile])
-                    print("Profile '" .. profileName .. "' created as a copy of '" .. currentProfile .. "'.")
-                    RefreshPapaGreetMenu()
-                end
-            else
-                print("Profile name cannot be empty or contain only whitespace.")
-            end
-        end,
-        EditBoxOnEnterPressed = function(self)
-            StaticPopup_OnClick(self:GetParent(), 1)
-        end,
-        EditBoxOnEscapePressed = function(self)
-            StaticPopup_OnClick(self:GetParent(), 2)
-        end
-    }
-
-    -- Define Static Popups for Adding Greetings and Emotes
-    StaticPopupDialogs["PAPA_GREET_ADD_GREETING"] = {
-        text = "Enter the greeting message:",
-        button1 = "Add",
-        button2 = "Cancel",
-        hasEditBox = true,
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-        OnShow = function(self)
-            self.editBox:SetText("")
-        end,
-        OnAccept = function(self)
-            local greeting = sanitizeInput(self.editBox:GetText(), MAX_MESSAGE_LENGTH)
-            if greeting then
-                table_insert(PapaGreetSavedVariables.profiles[currentProfile].greetings, greeting)
-                RefreshPapaGreetMenu()
-            else
-                print("Greeting cannot be empty or contain only whitespace.")
-            end
-        end,
-        EditBoxOnEnterPressed = function(self)
-            StaticPopup_OnClick(self:GetParent(), 1)
-        end,
-        EditBoxOnEscapePressed = function(self)
-            StaticPopup_OnClick(self:GetParent(), 2)
-        end
-    }
-
-    StaticPopupDialogs["PAPA_GREET_ADD_GOODBYE"] = {
-        text = "Enter the goodbye message:",
-        button1 = "Add",
-        button2 = "Cancel",
-        hasEditBox = true,
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-        OnShow = function(self)
-            self.editBox:SetText("")
-        end,
-        OnAccept = function(self)
-            local goodbye = sanitizeInput(self.editBox:GetText(), MAX_MESSAGE_LENGTH)
-            if goodbye then
-                table_insert(PapaGreetSavedVariables.profiles[currentProfile].goodbyes, goodbye)
-                RefreshPapaGreetMenu()
-            else
-                print("Goodbye cannot be empty or contain only whitespace.")
-            end
-        end,
-        EditBoxOnEnterPressed = function(self)
-            StaticPopup_OnClick(self:GetParent(), 1)
-        end,
-        EditBoxOnEscapePressed = function(self)
-            StaticPopup_OnClick(self:GetParent(), 2)
-        end
-    }
-
-    StaticPopupDialogs["PAPA_GREET_ADD_GREETING_EMOTE"] = {
-        text = "Enter the greeting emote:",
-        button1 = "Add",
-        button2 = "Cancel",
-        hasEditBox = true,
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-        OnShow = function(self)
-            self.editBox:SetText("")
-        end,
-        OnAccept = function(self)
-            local emote = sanitizeInput(self.editBox:GetText(), MAX_EMOTE_LENGTH)
-            if emote then
-                table_insert(PapaGreetSavedVariables.profiles[currentProfile].greetingEmotes, emote)
-                RefreshPapaGreetMenu()
-            else
-                print("Greeting emote cannot be empty or contain only whitespace.")
-            end
-        end,
-        EditBoxOnEnterPressed = function(self)
-            StaticPopup_OnClick(self:GetParent(), 1)
-        end,
-        EditBoxOnEscapePressed = function(self)
-            StaticPopup_OnClick(self:GetParent(), 2)
-        end
-    }
-
-    StaticPopupDialogs["PAPA_GREET_ADD_GOODBYE_EMOTE"] = {
-        text = "Enter the goodbye emote:",
-        button1 = "Add",
-        button2 = "Cancel",
-        hasEditBox = true,
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-        OnShow = function(self)
-            self.editBox:SetText("")
-        end,
-        OnAccept = function(self)
-            local emote = sanitizeInput(self.editBox:GetText(), MAX_EMOTE_LENGTH)
-            if emote then
-                table_insert(PapaGreetSavedVariables.profiles[currentProfile].goodbyeEmotes, emote)
-                RefreshPapaGreetMenu()
-            else
-                print("Goodbye emote cannot be empty or contain only whitespace.")
-            end
-        end,
-        EditBoxOnEnterPressed = function(self)
-            StaticPopup_OnClick(self:GetParent(), 1)
-        end,
-        EditBoxOnEscapePressed = function(self)
-            StaticPopup_OnClick(self:GetParent(), 2)
-        end
-    }
 
     -- Refresh the menu after creating all elements
     RefreshPapaGreetMenu()
