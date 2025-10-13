@@ -1,4 +1,5 @@
 -- PapaGreetMenu.lua
+-- Version: 1.2.2 - Debug Version
 
 -- Localize globals for performance
 local CreateFrame = CreateFrame
