@@ -241,23 +241,17 @@ StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
         self:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         self:SetScale(1.0)
         self:Show()
-        self.editBox:SetText("")
-        self.editBox:SetFocus()
-        print("PapaGreet DEBUG: Create Profile popup positioned at center")
+        local editBox = _G[self:GetName().."EditBox"] or _G[self:GetName().."WideEditBox"]
+        if editBox then
+            editBox:SetText("")
+            editBox:SetFocus()
+        end
     end,
     OnAccept = function(self)
-        print("PapaGreet DEBUG: OnAccept called for Create Profile!")
-        print("PapaGreet DEBUG: self = " .. tostring(self))
-        print("PapaGreet DEBUG: self.editBox = " .. tostring(self.editBox))
-        
-        local editBoxText = ""
-        if self.editBox and self.editBox.GetText then
-            editBoxText = self.editBox:GetText() or ""
-            print("PapaGreet DEBUG: Edit box text: " .. editBoxText)
-        else
-            print("PapaGreet DEBUG: ERROR - editBox not found!")
-            return
-        end
+        -- For StaticPopup dialogs, the text is in self.data if we pass it,
+        -- or we need to get it from the wndchild1 (editBox1)
+        local editBox = _G[self:GetName().."EditBox"] or _G[self:GetName().."WideEditBox"]
+        local editBoxText = editBox and editBox:GetText() or ""
         
         local profileName = sanitizeInput(editBoxText, MAX_PROFILE_NAME_LENGTH)
         print("PapaGreet DEBUG: After sanitize: " .. tostring(profileName))
@@ -322,11 +316,16 @@ StaticPopupDialogs["PAPA_GREET_COPY_PROFILE"] = {
     preferredIndex = 3,
     OnShow = function(self)
         self:SetFrameStrata("TOOLTIP")
-        self.editBox:SetText(currentProfile .. " Copy")
-        self.editBox:SetFocus()
+        local editBox = _G[self:GetName().."EditBox"] or _G[self:GetName().."WideEditBox"]
+        if editBox then
+            editBox:SetText(currentProfile .. " Copy")
+            editBox:SetFocus()
+        end
     end,
     OnAccept = function(self)
-        local profileName = sanitizeInput(self.editBox:GetText(), MAX_PROFILE_NAME_LENGTH)
+        local editBox = _G[self:GetName().."EditBox"] or _G[self:GetName().."WideEditBox"]
+        local editBoxText = editBox and editBox:GetText() or ""
+        local profileName = sanitizeInput(editBoxText, MAX_PROFILE_NAME_LENGTH)
         if profileName then
             if PapaGreetSavedVariables.profiles[profileName] then
                 print("Profile '" .. profileName .. "' already exists.")
@@ -358,11 +357,16 @@ StaticPopupDialogs["PAPA_GREET_ADD_GREETING"] = {
     preferredIndex = 3,
     OnShow = function(self)
         self:SetFrameStrata("TOOLTIP")
-        self.editBox:SetText("")
-        self.editBox:SetFocus()
+        local editBox = _G[self:GetName().."EditBox"] or _G[self:GetName().."WideEditBox"]
+        if editBox then
+            editBox:SetText("")
+            editBox:SetFocus()
+        end
     end,
     OnAccept = function(self)
-        local greeting = sanitizeInput(self.editBox:GetText(), MAX_MESSAGE_LENGTH)
+        local editBox = _G[self:GetName().."EditBox"] or _G[self:GetName().."WideEditBox"]
+        local editBoxText = editBox and editBox:GetText() or ""
+        local greeting = sanitizeInput(editBoxText, MAX_MESSAGE_LENGTH)
         if greeting then
             table_insert(PapaGreetSavedVariables.profiles[currentProfile].greetings, greeting)
             RefreshPapaGreetMenu()
@@ -389,11 +393,16 @@ StaticPopupDialogs["PAPA_GREET_ADD_GOODBYE"] = {
     preferredIndex = 3,
     OnShow = function(self)
         self:SetFrameStrata("TOOLTIP")
-        self.editBox:SetText("")
-        self.editBox:SetFocus()
+        local editBox = _G[self:GetName().."EditBox"] or _G[self:GetName().."WideEditBox"]
+        if editBox then
+            editBox:SetText("")
+            editBox:SetFocus()
+        end
     end,
     OnAccept = function(self)
-        local goodbye = sanitizeInput(self.editBox:GetText(), MAX_MESSAGE_LENGTH)
+        local editBox = _G[self:GetName().."EditBox"] or _G[self:GetName().."WideEditBox"]
+        local editBoxText = editBox and editBox:GetText() or ""
+        local goodbye = sanitizeInput(editBoxText, MAX_MESSAGE_LENGTH)
         if goodbye then
             table_insert(PapaGreetSavedVariables.profiles[currentProfile].goodbyes, goodbye)
             RefreshPapaGreetMenu()
@@ -420,11 +429,16 @@ StaticPopupDialogs["PAPA_GREET_ADD_GREETING_EMOTE"] = {
     preferredIndex = 3,
     OnShow = function(self)
         self:SetFrameStrata("TOOLTIP")
-        self.editBox:SetText("")
-        self.editBox:SetFocus()
+        local editBox = _G[self:GetName().."EditBox"] or _G[self:GetName().."WideEditBox"]
+        if editBox then
+            editBox:SetText("")
+            editBox:SetFocus()
+        end
     end,
     OnAccept = function(self)
-        local emote = sanitizeInput(self.editBox:GetText(), MAX_EMOTE_LENGTH)
+        local editBox = _G[self:GetName().."EditBox"] or _G[self:GetName().."WideEditBox"]
+        local editBoxText = editBox and editBox:GetText() or ""
+        local emote = sanitizeInput(editBoxText, MAX_EMOTE_LENGTH)
         if emote then
             table_insert(PapaGreetSavedVariables.profiles[currentProfile].greetingEmotes, emote)
             RefreshPapaGreetMenu()
@@ -451,11 +465,16 @@ StaticPopupDialogs["PAPA_GREET_ADD_GOODBYE_EMOTE"] = {
     preferredIndex = 3,
     OnShow = function(self)
         self:SetFrameStrata("TOOLTIP")
-        self.editBox:SetText("")
-        self.editBox:SetFocus()
+        local editBox = _G[self:GetName().."EditBox"] or _G[self:GetName().."WideEditBox"]
+        if editBox then
+            editBox:SetText("")
+            editBox:SetFocus()
+        end
     end,
     OnAccept = function(self)
-        local emote = sanitizeInput(self.editBox:GetText(), MAX_EMOTE_LENGTH)
+        local editBox = _G[self:GetName().."EditBox"] or _G[self:GetName().."WideEditBox"]
+        local editBoxText = editBox and editBox:GetText() or ""
+        local emote = sanitizeInput(editBoxText, MAX_EMOTE_LENGTH)
         if emote then
             table_insert(PapaGreetSavedVariables.profiles[currentProfile].goodbyeEmotes, emote)
             RefreshPapaGreetMenu()
