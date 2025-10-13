@@ -164,7 +164,7 @@ local function createDeleteDropdown(name, parent, point, offsetX, offsetY, width
     
     -- Create dropdown below the label
     local dropdown = CreateFrame("Frame", name, parent, "UIDropDownMenuTemplate")
-    dropdown:SetPoint(point, parent, point, offsetX - 15, offsetY - 20)
+    dropdown:SetPoint(point, parent, point, offsetX - 15, offsetY - 25)
     dropdown:SetSize(width, 25)
 
     UIDropDownMenu_Initialize(dropdown, function(self, level)
@@ -215,8 +215,14 @@ StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
     preferredIndex = 3,
     OnShow = function(self)
         self:SetFrameStrata("TOOLTIP")
+        self:SetFrameLevel(1000)
+        self:ClearAllPoints()
+        self:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        self:SetScale(1.0)
+        self:Show()
         self.editBox:SetText("")
         self.editBox:SetFocus()
+        print("PapaGreet DEBUG: Create Profile popup positioned at center")
     end,
     OnAccept = function(self)
         local profileName = sanitizeInput(self.editBox:GetText(), MAX_PROFILE_NAME_LENGTH)
