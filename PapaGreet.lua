@@ -101,6 +101,7 @@ local function Initialize()
                     },
                     delayEmote = 3,
                     delayLeave = 8,
+                    cooldown = 3,
                 }
             },
             currentProfile = DEFAULT_PROFILE,
@@ -110,6 +111,12 @@ local function Initialize()
     -- Ensure buttonPosition exists for existing saves
     if not PapaGreetSavedVariables.buttonPosition then
         PapaGreetSavedVariables.buttonPosition = { point = "CENTER", x = 0, y = 0 }
+    end
+    -- Ensure all profiles have cooldown field
+    for _, profile in pairs(PapaGreetSavedVariables.profiles) do
+        if profile.cooldown == nil then
+            profile.cooldown = 3
+        end
     end
     return PapaGreetSavedVariables.currentProfile
 end
@@ -194,15 +201,72 @@ local leaveCountdownTicker
 local leaveTimeRemaining = 0
 local papaGreetButton -- Forward declaration
 
+-- Cooldown system
+local lastGreetingTime = 0
+local lastGoodbyeTime = 0
+
+local function IsOnCooldown(lastTime, cooldown)
+    return (GetTime() - lastTime) < cooldown
+end
+
+local function GetCooldownRemaining(lastTime, cooldown)
+    local remaining = cooldown - (GetTime() - lastTime)
+    return remaining > 0 and remaining or 0
+end
+
+local function UpdateCooldownDisplay()
+    if not papaGreetButton or not papaGreetButton.cooldown then return end
+    
+    local profile = GetProfile()
+    local cooldown = profile.cooldown or 0
+    
+    if cooldown == 0 then
+        papaGreetButton.cooldown:Hide()
+        return
+    end
+    
+    -- Check both greeting and goodbye cooldowns
+    local greetCd = GetCooldownRemaining(lastGreetingTime, cooldown)
+    local goodbyeCd = GetCooldownRemaining(lastGoodbyeTime, cooldown)
+    local maxCd = math.max(greetCd, goodbyeCd)
+    
+    if maxCd > 0 then
+        papaGreetButton.cooldown:SetCooldown(GetTime() - (cooldown - maxCd), cooldown)
+        papaGreetButton.cooldown:Show()
+    else
+        papaGreetButton.cooldown:Hide()
+    end
+end
+
 local function HandleGreeting()
     local profile = GetProfile()
+    
+    -- Check cooldown
+    local cooldown = profile.cooldown or 0
+    if cooldown > 0 and IsOnCooldown(lastGreetingTime, cooldown) then
+        local remaining = GetCooldownRemaining(lastGreetingTime, cooldown)
+        UIErrorsFrame:AddMessage(string.format("Greeting on cooldown (%.1fs remaining)", remaining), 1.0, 0.5, 0.0)
+        -- Shake animation
+        if papaGreetButton then
+            papaGreetButton:SetPoint(papaGreetButton:GetPoint())
+            papaGreetButton:StartMoving()
+            papaGreetButton:StopMovingOrSizing()
+        end
+        return
+    end
+    
     if not profile.greetings or #profile.greetings == 0 then
         UIErrorsFrame:AddMessage("No greetings configured. Use /papa menu to add some.", 1.0, 0.0, 0.0)
         return
     end
+    
     local greeting = profile.greetings[math_random(#profile.greetings)]
     local emote = (#profile.greetingEmotes > 0) and profile.greetingEmotes[math_random(#profile.greetingEmotes)] or nil
     SendMessageAndEmote(greeting, emote, profile.delayEmote)
+    
+    -- Set cooldown
+    lastGreetingTime = GetTime()
+    UpdateCooldownDisplay()
 end
 
 local function UpdateLeaveCountdown()
@@ -232,13 +296,33 @@ end
 
 local function HandleGoodbye()
     local profile = GetProfile()
+    
+    -- Check cooldown
+    local cooldown = profile.cooldown or 0
+    if cooldown > 0 and IsOnCooldown(lastGoodbyeTime, cooldown) then
+        local remaining = GetCooldownRemaining(lastGoodbyeTime, cooldown)
+        UIErrorsFrame:AddMessage(string.format("Goodbye on cooldown (%.1fs remaining)", remaining), 1.0, 0.5, 0.0)
+        -- Shake animation
+        if papaGreetButton then
+            papaGreetButton:SetPoint(papaGreetButton:GetPoint())
+            papaGreetButton:StartMoving()
+            papaGreetButton:StopMovingOrSizing()
+        end
+        return
+    end
+    
     if not profile.goodbyes or #profile.goodbyes == 0 then
         UIErrorsFrame:AddMessage("No goodbyes configured. Use /papa menu to add some.", 1.0, 0.0, 0.0)
         return
     end
+    
     local goodbye = profile.goodbyes[math_random(#profile.goodbyes)]
     local emote = (#profile.goodbyeEmotes > 0) and profile.goodbyeEmotes[math_random(#profile.goodbyeEmotes)] or nil
     SendMessageAndEmote(goodbye, emote, profile.delayEmote)
+    
+    -- Set cooldown
+    lastGoodbyeTime = GetTime()
+    UpdateCooldownDisplay()
     
     -- Start the leave timer with visual countdown
     leaveTimerActive = true
@@ -352,6 +436,14 @@ local function CreatePapaGreetButton()
     button.countdownText:SetTextColor(1, 0, 0, 1)
     button.countdownText:Hide()
 
+    -- Create cooldown frame overlay
+    button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
+    button.cooldown:SetAllPoints(button)
+    button.cooldown:SetDrawEdge(true)
+    button.cooldown:SetDrawSwipe(true)
+    button.cooldown:SetReverse(false)
+    button.cooldown:Hide()
+
     button:SetScript("OnMouseDown", function(self, button)
         if button == "MiddleButton" then
             self:StartMoving()
@@ -401,19 +493,59 @@ end
 SLASH_PAPA1 = SLASH_PAPA1 or '/papa'
 
 SlashCmdList["PAPA"] = function(cmd)
-    local command = cmd:match("^%S+")
-    if not command then
-        print("Usage: /papa menu | hide | show")
+    local command, arg = cmd:match("^(%S*)%s*(.-)$")
+    
+    if not command or command == "" then
+        print("|cff00ff00PapaGreet Commands:|r")
+        print("  |cffffd700/papa greet|r - Send greeting")
+        print("  |cffffd700/papa bye|r - Send goodbye & leave")
+        print("  |cffffd700/papa cancel|r - Cancel leave timer")
+        print("  |cffffd700/papa menu|r - Toggle settings menu")
+        print("  |cffffd700/papa hide|r - Hide button")
+        print("  |cffffd700/papa show|r - Show button")
+        print("  |cffffd700/papa reset|r - Reset button position")
+        print("  |cffffd700/papa cd [seconds]|r - Set cooldown (0=off)")
+        print("  |cffffd700/papa version|r - Show version")
         return
     end
 
-    if command == "menu" then
+    if command == "greet" then
+        HandleGreeting()
+    elseif command == "bye" or command == "goodbye" then
+        HandleGoodbye()
+    elseif command == "cancel" then
+        CancelLeave()
+    elseif command == "menu" then
         TogglePapaGreetMenu()
     elseif command == "hide" then
         papaGreetButton:Hide()
+        print("PapaGreet button hidden. Use |cffffd700/papa show|r to show it.")
     elseif command == "show" then
         papaGreetButton:Show()
+        print("PapaGreet button shown.")
+    elseif command == "reset" then
+        PapaGreetSavedVariables.buttonPosition = { point = "CENTER", x = 0, y = 0 }
+        papaGreetButton:ClearAllPoints()
+        papaGreetButton:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        print("PapaGreet button position reset to center.")
+    elseif command == "cd" or command == "cooldown" then
+        local value = tonumber(arg)
+        if value and value >= 0 then
+            local profile = GetProfile()
+            profile.cooldown = math.floor(value)
+            if value == 0 then
+                print("Cooldown disabled.")
+            else
+                print(string.format("Cooldown set to %d seconds.", value))
+            end
+        else
+            print("Usage: /papa cd [seconds] (0 to disable)")
+        end
+    elseif command == "version" or command == "v" then
+        print("|cff00ff00PapaGreet|r version |cffffd7001.2.0|r")
+        print("Author: Alan Denniston")
     else
-        print("Usage: /papa menu | hide | show")
+        print("|cffff0000Unknown command:|r " .. command)
+        print("Type |cffffd700/papa|r for help.")
     end
 end

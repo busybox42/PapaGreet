@@ -41,12 +41,29 @@ From the menu you can:
 - Add/remove custom emotes for greetings and goodbyes
 - Adjust emote delay (time between message and emote)
 - Adjust leave delay (time between goodbye and leaving group)
+- Configure cooldown (time between greeting/goodbye uses, 0 to disable)
+
+### Cooldown System
+
+PapaGreet includes an optional cooldown system to prevent accidental spam:
+- **Visual cooldown spiral** on the button shows remaining cooldown time
+- **Configurable delay** (default 3 seconds, 0 to disable)
+- **Per-profile settings** - each profile can have its own cooldown
+- **Shake feedback** when attempting to use during cooldown
 
 ### Slash Commands
 
+Type `/papa` to see all available commands:
+
+- `/papa greet` - Send greeting now
+- `/papa bye` - Send goodbye and start leave timer
+- `/papa cancel` - Cancel the pending leave action
 - `/papa menu` - Toggle the settings menu
-- `/papa show` - Show the button
 - `/papa hide` - Hide the button
+- `/papa show` - Show the button
+- `/papa reset` - Reset button position to center
+- `/papa cd [seconds]` - Set cooldown (0=off)
+- `/papa version` - Show addon version
 
 ### Keybindings
 

@@ -68,6 +68,7 @@ local function InitializeVariables()
         profile.goodbyeEmotes = profile.goodbyeEmotes or {}
         profile.delayEmote = profile.delayEmote or 3
         profile.delayLeave = profile.delayLeave or 8
+        profile.cooldown = profile.cooldown or 3
     end
 end
 
@@ -85,6 +86,11 @@ local function RefreshPapaGreetMenu()
     local leaveDelayEditBox = _G["PapaGreetLeaveDelayEditBox"]
     if leaveDelayEditBox then
         leaveDelayEditBox:SetText(math_floor(PapaGreetSavedVariables.profiles[currentProfile].delayLeave or 8))
+    end
+    
+    local cooldownEditBox = _G["PapaGreetCooldownEditBox"]
+    if cooldownEditBox then
+        cooldownEditBox:SetText(math_floor(PapaGreetSavedVariables.profiles[currentProfile].cooldown or 3))
     end
     
     UIDropDownMenu_SetSelectedValue(PapaGreetProfileDropdown, currentProfile)
@@ -177,7 +183,7 @@ function ShowPapaGreetMenu()
     createButton("PapaGreetCopyProfileButton", menu, "TOPLEFT", 207, -70, 120, 27, "Copy Profile", "PAPA_GREET_COPY_PROFILE")
 
     -- Helper function to create delay labels and edit boxes
-    local function createDelay(labelText, editBoxName, yOffset)
+    local function createDelay(labelText, editBoxName, yOffset, configKey, defaultValue)
         local label = menu:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         label:SetPoint("TOPLEFT", menu, "TOPLEFT", 20, yOffset)
         label:SetText(labelText)
@@ -188,40 +194,40 @@ function ShowPapaGreetMenu()
         editBox:SetNumeric(true)
         editBox:SetMaxLetters(2)
         editBox:SetAutoFocus(false)
-        local delayKey = editBoxName == "PapaGreetDelayEditBox" and "delayEmote" or "delayLeave"
-        editBox:SetText(math_floor(PapaGreetSavedVariables.profiles[currentProfile][delayKey] or (delayKey == "delayEmote" and 3 or 8)))
+        editBox:SetText(math_floor(PapaGreetSavedVariables.profiles[currentProfile][configKey] or defaultValue))
 
         editBox:SetScript("OnEnterPressed", function(self)
             local inputValue = tonumber(self:GetText())
             if inputValue then
-                PapaGreetSavedVariables.profiles[currentProfile][delayKey] = math_floor(inputValue)
+                PapaGreetSavedVariables.profiles[currentProfile][configKey] = math_floor(inputValue)
                 RefreshPapaGreetMenu()
             else
-                print("Invalid input for " .. delayKey)
+                print("Invalid input for " .. configKey)
             end
             self:ClearFocus()
         end)
     end
 
     -- Create Delay EditBoxes
-    createDelay("Emote Delay (seconds):", "PapaGreetDelayEditBox", -120)
-    createDelay("Leave Delay (seconds):", "PapaGreetLeaveDelayEditBox", -160)
+    createDelay("Emote Delay (seconds):", "PapaGreetDelayEditBox", -120, "delayEmote", 3)
+    createDelay("Leave Delay (seconds):", "PapaGreetLeaveDelayEditBox", -160, "delayLeave", 8)
+    createDelay("Cooldown (seconds, 0=off):", "PapaGreetCooldownEditBox", -200, "cooldown", 3)
 
     -- Create Add Greeting Button and Delete Greeting Dropdown
-    createButton("PapaGreetAddGreetingButton", menu, "TOPLEFT", 20, -200, 140, 27, "Add Greeting", "PAPA_GREET_ADD_GREETING")
-    createDeleteDropdown("PapaGreetDeleteGreetingDropdown", menu, "TOPLEFT", 180, -200, 140, "greetings")
+    createButton("PapaGreetAddGreetingButton", menu, "TOPLEFT", 20, -240, 140, 27, "Add Greeting", "PAPA_GREET_ADD_GREETING")
+    createDeleteDropdown("PapaGreetDeleteGreetingDropdown", menu, "TOPLEFT", 180, -240, 140, "greetings")
 
     -- Create Add Goodbye Button and Delete Goodbye Dropdown
-    createButton("PapaGreetAddGoodbyeButton", menu, "TOPLEFT", 20, -240, 140, 27, "Add Goodbye", "PAPA_GREET_ADD_GOODBYE")
-    createDeleteDropdown("PapaGreetDeleteGoodbyeDropdown", menu, "TOPLEFT", 180, -240, 140, "goodbyes")
+    createButton("PapaGreetAddGoodbyeButton", menu, "TOPLEFT", 20, -280, 140, 27, "Add Goodbye", "PAPA_GREET_ADD_GOODBYE")
+    createDeleteDropdown("PapaGreetDeleteGoodbyeDropdown", menu, "TOPLEFT", 180, -280, 140, "goodbyes")
 
     -- Create Add Greeting Emote Button and Delete Greeting Emote Dropdown
-    createButton("PapaGreetAddGreetingEmoteButton", menu, "TOPLEFT", 20, -280, 140, 27, "Add Greeting Emote", "PAPA_GREET_ADD_GREETING_EMOTE")
-    createDeleteDropdown("PapaGreetDeleteGreetingEmoteDropdown", menu, "TOPLEFT", 180, -280, 140, "greetingEmotes")
+    createButton("PapaGreetAddGreetingEmoteButton", menu, "TOPLEFT", 20, -320, 140, 27, "Add Greeting Emote", "PAPA_GREET_ADD_GREETING_EMOTE")
+    createDeleteDropdown("PapaGreetDeleteGreetingEmoteDropdown", menu, "TOPLEFT", 180, -320, 140, "greetingEmotes")
 
     -- Create Add Goodbye Emote Button and Delete Goodbye Emote Dropdown
-    createButton("PapaGreetAddGoodbyeEmoteButton", menu, "TOPLEFT", 20, -320, 140, 27, "Add Goodbye Emote", "PAPA_GREET_ADD_GOODBYE_EMOTE")
-    createDeleteDropdown("PapaGreetDeleteGoodbyeEmoteDropdown", menu, "TOPLEFT", 180, -320, 140, "goodbyeEmotes")
+    createButton("PapaGreetAddGoodbyeEmoteButton", menu, "TOPLEFT", 20, -360, 140, 27, "Add Goodbye Emote", "PAPA_GREET_ADD_GOODBYE_EMOTE")
+    createDeleteDropdown("PapaGreetDeleteGoodbyeEmoteDropdown", menu, "TOPLEFT", 180, -360, 140, "goodbyeEmotes")
 
     -- Define Static Popups for Profile Management
     StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
