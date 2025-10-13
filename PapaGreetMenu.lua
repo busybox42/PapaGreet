@@ -103,8 +103,18 @@ local function createButton(name, parent, point, offsetX, offsetY, width, height
     btn:SetSize(width, height)
     btn:SetText(text)
     btn:SetScript("OnClick", function()
-        print("PapaGreet DEBUG: Button clicked: " .. text .. " | Popup: " .. tostring(popup))
+        print("PapaGreet DEBUG: ===== BUTTON CLICKED =====")
+        print("PapaGreet DEBUG: Button text: " .. text)
+        print("PapaGreet DEBUG: Popup: " .. tostring(popup))
         print("PapaGreet DEBUG: Current profile: " .. tostring(currentProfile))
+        print("PapaGreet DEBUG: Button enabled: " .. tostring(btn:IsEnabled()))
+        print("PapaGreet DEBUG: Button visible: " .. tostring(btn:IsVisible()))
+        print("PapaGreet DEBUG: Button shown: " .. tostring(btn:IsShown()))
+        
+        -- Test if ANY button click works
+        if text == "Create Profile" then
+            print("PapaGreet DEBUG: CREATE PROFILE BUTTON CLICKED!")
+        end
         
         -- Check if trying to modify Default profile
         if currentProfile == DEFAULT_PROFILE and (popup == "PAPA_GREET_ADD_GREETING" or 
