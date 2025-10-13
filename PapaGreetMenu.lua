@@ -247,9 +247,19 @@ StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
     end,
     OnAccept = function(self)
         print("PapaGreet DEBUG: OnAccept called for Create Profile!")
-        print("PapaGreet DEBUG: Edit box text: " .. tostring(self.editBox:GetText()))
+        print("PapaGreet DEBUG: self = " .. tostring(self))
+        print("PapaGreet DEBUG: self.editBox = " .. tostring(self.editBox))
         
-        local profileName = sanitizeInput(self.editBox:GetText(), MAX_PROFILE_NAME_LENGTH)
+        local editBoxText = ""
+        if self.editBox and self.editBox.GetText then
+            editBoxText = self.editBox:GetText() or ""
+            print("PapaGreet DEBUG: Edit box text: " .. editBoxText)
+        else
+            print("PapaGreet DEBUG: ERROR - editBox not found!")
+            return
+        end
+        
+        local profileName = sanitizeInput(editBoxText, MAX_PROFILE_NAME_LENGTH)
         print("PapaGreet DEBUG: After sanitize: " .. tostring(profileName))
         
         if profileName then
