@@ -246,14 +246,21 @@ StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
         print("PapaGreet DEBUG: Create Profile popup positioned at center")
     end,
     OnAccept = function(self)
+        print("PapaGreet DEBUG: OnAccept called for Create Profile!")
+        print("PapaGreet DEBUG: Edit box text: " .. tostring(self.editBox:GetText()))
+        
         local profileName = sanitizeInput(self.editBox:GetText(), MAX_PROFILE_NAME_LENGTH)
+        print("PapaGreet DEBUG: After sanitize: " .. tostring(profileName))
+        
         if profileName then
             if PapaGreetSavedVariables.profiles[profileName] then
                 print("Profile '" .. profileName .. "' already exists.")
             else
+                print("PapaGreet DEBUG: Creating new profile: " .. profileName)
                 PapaGreetSavedVariables.profiles[profileName] = deepcopy(PapaGreetSavedVariables.profiles[currentProfile])
                 currentProfile = profileName
                 PapaGreetSavedVariables.currentProfile = currentProfile
+                print("PapaGreet DEBUG: About to refresh menu")
                 RefreshPapaGreetMenu()
                 print("Profile '" .. profileName .. "' created.")
             end
