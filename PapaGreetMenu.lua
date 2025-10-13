@@ -98,10 +98,20 @@ end
 
 -- Helper function to create buttons
 local function createButton(name, parent, point, offsetX, offsetY, width, height, text, popup)
-    local btn = CreateFrame("Button", name, parent, "GameMenuButtonTemplate")
+    print("PapaGreet DEBUG: Creating button: " .. name .. " with text: " .. text)
+    local btn = CreateFrame("Button", name, parent, "UIPanelButtonTemplate")
     btn:SetPoint(point, offsetX, offsetY)
     btn:SetSize(width, height)
     btn:SetText(text)
+    
+    -- Test if button was created properly
+    print("PapaGreet DEBUG: Button created - Name: " .. (btn:GetName() or "nil") .. ", Text: " .. (btn:GetText() or "nil"))
+    
+    -- Test if button is interactive
+    btn:SetScript("OnEnter", function()
+        print("PapaGreet DEBUG: Mouse entered button: " .. text)
+    end)
+    
     btn:SetScript("OnClick", function()
         print("PapaGreet DEBUG: ===== BUTTON CLICKED =====")
         print("PapaGreet DEBUG: Button text: " .. text)
