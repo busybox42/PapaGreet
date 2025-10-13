@@ -177,15 +177,9 @@ local function createButton(name, parent, point, offsetX, offsetY, width, height
 end
 
 -- Helper function to create dropdown menus for deleting items
-local function createDeleteDropdown(name, parent, point, offsetX, offsetY, width, itemsKey, label)
-    -- Create label
-    local labelText = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    labelText:SetPoint(point, parent, point, offsetX, offsetY)
-    labelText:SetText(label)
-    
-    -- Create dropdown below the label (extra spacing to prevent overlap)
+local function createDeleteDropdown(name, parent, point, offsetX, offsetY, width, itemsKey)
     local dropdown = CreateFrame("Frame", name, parent, "UIDropDownMenuTemplate")
-    dropdown:SetPoint(point, parent, point, offsetX - 15, offsetY - 35)
+    dropdown:SetPoint(point, parent, point, offsetX - 15, offsetY)
     dropdown:SetSize(width, 25)
 
     UIDropDownMenu_Initialize(dropdown, function(self, level)
@@ -208,7 +202,7 @@ local function createDeleteDropdown(name, parent, point, offsetX, offsetY, width
         
         for i, item in ipairs(items) do
             local info = UIDropDownMenu_CreateInfo()
-            info.text = item
+            info.text = "Delete " .. item
             info.func = function()
                 table_remove(items, i)
                 RefreshPapaGreetMenu()
@@ -218,8 +212,8 @@ local function createDeleteDropdown(name, parent, point, offsetX, offsetY, width
         end
     end)
     
-    -- Set button text
-    UIDropDownMenu_SetText(dropdown, "Select to Delete")
+    -- Set default button text
+    UIDropDownMenu_SetText(dropdown, "Delete...")
     
     return dropdown
 end
@@ -577,19 +571,19 @@ function ShowPapaGreetMenu()
 
     -- Create Add Greeting Button and Delete Greeting Dropdown
     createButton("PapaGreetAddGreetingButton", menu, "TOPLEFT", 20, -240, 140, 27, "Add Greeting", "PAPA_GREET_ADD_GREETING")
-    createDeleteDropdown("PapaGreetDeleteGreetingDropdown", menu, "TOPLEFT", 180, -240, 140, "greetings", "Delete Greeting:")
+    createDeleteDropdown("PapaGreetDeleteGreetingDropdown", menu, "TOPLEFT", 180, -240, 140, "greetings")
 
     -- Create Add Goodbye Button and Delete Goodbye Dropdown
     createButton("PapaGreetAddGoodbyeButton", menu, "TOPLEFT", 20, -280, 140, 27, "Add Goodbye", "PAPA_GREET_ADD_GOODBYE")
-    createDeleteDropdown("PapaGreetDeleteGoodbyeDropdown", menu, "TOPLEFT", 180, -280, 140, "goodbyes", "Delete Goodbye:")
+    createDeleteDropdown("PapaGreetDeleteGoodbyeDropdown", menu, "TOPLEFT", 180, -280, 140, "goodbyes")
 
     -- Create Add Greeting Emote Button and Delete Greeting Emote Dropdown
     createButton("PapaGreetAddGreetingEmoteButton", menu, "TOPLEFT", 20, -320, 140, 27, "Add Greeting Emote", "PAPA_GREET_ADD_GREETING_EMOTE")
-    createDeleteDropdown("PapaGreetDeleteGreetingEmoteDropdown", menu, "TOPLEFT", 180, -320, 140, "greetingEmotes", "Delete Greeting Emote:")
+    createDeleteDropdown("PapaGreetDeleteGreetingEmoteDropdown", menu, "TOPLEFT", 180, -320, 140, "greetingEmotes")
 
     -- Create Add Goodbye Emote Button and Delete Goodbye Emote Dropdown
     createButton("PapaGreetAddGoodbyeEmoteButton", menu, "TOPLEFT", 20, -360, 140, 27, "Add Goodbye Emote", "PAPA_GREET_ADD_GOODBYE_EMOTE")
-    createDeleteDropdown("PapaGreetDeleteGoodbyeEmoteDropdown", menu, "TOPLEFT", 180, -360, 140, "goodbyeEmotes", "Delete Goodbye Emote:")
+    createDeleteDropdown("PapaGreetDeleteGoodbyeEmoteDropdown", menu, "TOPLEFT", 180, -360, 140, "goodbyeEmotes")
 
     -- Refresh the menu after creating all elements
     RefreshPapaGreetMenu()
