@@ -565,7 +565,7 @@ SlashCmdList["PAPA"] = function(cmd)
             print("Usage: /papa cd [seconds] (0 to disable)")
         end
     elseif command == "version" or command == "v" then
-        print("|cff00ff00PapaGreet|r version |cffffd7001.2.0|r")
+        print("|cff00ff00PapaGreet|r version |cffffd7001.2.1|r")
     else
         print("|cffff0000Unknown command:|r " .. command)
         print("Type |cffffd700/papa|r for help.")
