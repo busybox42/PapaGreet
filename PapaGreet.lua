@@ -148,6 +148,10 @@ local function ProcessGreetingQueue()
                     PapaGreetAPI.DoEmote(queuedGreeting.emote)
                 end)
             end
+            -- Call callback after emote delay if provided
+            if queuedGreeting.callback then
+                C_Timer.After(queuedGreeting.delayEmote + 0.5, queuedGreeting.callback)
+            end
         end
         wipe(greetingQueue)
         UIErrorsFrame:AddMessage("Queued greetings sent!", 0.0, 1.0, 0.0)
@@ -169,7 +173,7 @@ else
     end)
 end
 
-local function SendMessageAndEmote(message, emote, delayEmote)
+local function SendMessageAndEmote(message, emote, delayEmote, callback)
     local channel = DetermineChatChannel()
     
     -- Check if in combat
@@ -178,10 +182,11 @@ local function SendMessageAndEmote(message, emote, delayEmote)
             message = message,
             channel = channel,
             emote = emote,
-            delayEmote = delayEmote or 3
+            delayEmote = delayEmote or 3,
+            callback = callback
         })
         UIErrorsFrame:AddMessage("Greeting queued (in combat)", 1.0, 1.0, 0.0)
-        return
+        return true -- Queued
     end
     
     -- Send immediately if not in combat
@@ -193,6 +198,13 @@ local function SendMessageAndEmote(message, emote, delayEmote)
             PapaGreetAPI.DoEmote(emote)
         end)
     end
+    
+    -- Call callback after emote delay if provided
+    if callback then
+        C_Timer.After(delayEmote + 0.5, callback)
+    end
+    
+    return false -- Sent immediately
 end
 
 local leaveTimer
@@ -294,35 +306,8 @@ local function StopLeaveCountdown()
     end
 end
 
-local function HandleGoodbye()
+local function StartLeaveTimer()
     local profile = GetProfile()
-    
-    -- Check cooldown
-    local cooldown = profile.cooldown or 0
-    if cooldown > 0 and IsOnCooldown(lastGoodbyeTime, cooldown) then
-        local remaining = GetCooldownRemaining(lastGoodbyeTime, cooldown)
-        UIErrorsFrame:AddMessage(string.format("Goodbye on cooldown (%.1fs remaining)", remaining), 1.0, 0.5, 0.0)
-        -- Shake animation
-        if papaGreetButton then
-            papaGreetButton:SetPoint(papaGreetButton:GetPoint())
-            papaGreetButton:StartMoving()
-            papaGreetButton:StopMovingOrSizing()
-        end
-        return
-    end
-    
-    if not profile.goodbyes or #profile.goodbyes == 0 then
-        UIErrorsFrame:AddMessage("No goodbyes configured. Use /papa menu to add some.", 1.0, 0.0, 0.0)
-        return
-    end
-    
-    local goodbye = profile.goodbyes[math_random(#profile.goodbyes)]
-    local emote = (#profile.goodbyeEmotes > 0) and profile.goodbyeEmotes[math_random(#profile.goodbyeEmotes)] or nil
-    SendMessageAndEmote(goodbye, emote, profile.delayEmote)
-    
-    -- Set cooldown
-    lastGoodbyeTime = GetTime()
-    UpdateCooldownDisplay()
     
     -- Start the leave timer with visual countdown
     leaveTimerActive = true
@@ -355,6 +340,44 @@ local function HandleGoodbye()
             StopLeaveCountdown()
         end
     end)
+end
+
+local function HandleGoodbye()
+    local profile = GetProfile()
+    
+    -- Check cooldown
+    local cooldown = profile.cooldown or 0
+    if cooldown > 0 and IsOnCooldown(lastGoodbyeTime, cooldown) then
+        local remaining = GetCooldownRemaining(lastGoodbyeTime, cooldown)
+        UIErrorsFrame:AddMessage(string.format("Goodbye on cooldown (%.1fs remaining)", remaining), 1.0, 0.5, 0.0)
+        -- Shake animation
+        if papaGreetButton then
+            papaGreetButton:SetPoint(papaGreetButton:GetPoint())
+            papaGreetButton:StartMoving()
+            papaGreetButton:StopMovingOrSizing()
+        end
+        return
+    end
+    
+    if not profile.goodbyes or #profile.goodbyes == 0 then
+        UIErrorsFrame:AddMessage("No goodbyes configured. Use /papa menu to add some.", 1.0, 0.0, 0.0)
+        return
+    end
+    
+    -- Set cooldown
+    lastGoodbyeTime = GetTime()
+    UpdateCooldownDisplay()
+    
+    local goodbye = profile.goodbyes[math_random(#profile.goodbyes)]
+    local emote = (#profile.goodbyeEmotes > 0) and profile.goodbyeEmotes[math_random(#profile.goodbyeEmotes)] or nil
+    
+    -- Send message/emote with callback to start leave timer
+    -- This ensures leave timer only starts after message is actually sent (even if queued during combat)
+    local wasQueued = SendMessageAndEmote(goodbye, emote, profile.delayEmote, StartLeaveTimer)
+    
+    if wasQueued then
+        UIErrorsFrame:AddMessage("Goodbye queued (in combat). Will leave after combat.", 1.0, 1.0, 0.0)
+    end
 end
 
 local function CancelLeave()
