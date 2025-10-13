@@ -118,11 +118,26 @@ local function createButton(name, parent, point, offsetX, offsetY, width, height
             print("PapaGreet DEBUG: Attempting to show popup: " .. popup)
             if StaticPopupDialogs[popup] then
                 print("PapaGreet DEBUG: Popup definition found!")
+                
+                -- Hide any existing dialogs first
+                StaticPopup_Hide(popup)
+                
+                -- Force the dialog to appear
                 local dialog = StaticPopup_Show(popup)
                 if dialog then
                     print("PapaGreet DEBUG: Popup shown successfully")
+                    print("PapaGreet DEBUG: Dialog frame strata: " .. dialog:GetFrameStrata())
+                    print("PapaGreet DEBUG: Dialog is shown: " .. tostring(dialog:IsShown()))
+                    dialog:Raise()
                 else
                     print("PapaGreet ERROR: StaticPopup_Show returned nil!")
+                    print("PapaGreet DEBUG: Checking for conflicts...")
+                    for i = 1, 4 do
+                        local activeDialog = _G["StaticPopup" .. i]
+                        if activeDialog and activeDialog:IsShown() then
+                            print("  StaticPopup" .. i .. " is already shown: " .. tostring(activeDialog.which))
+                        end
+                    end
                 end
             else
                 print("PapaGreet ERROR: Popup " .. popup .. " not found in StaticPopupDialogs!")
@@ -197,8 +212,11 @@ StaticPopupDialogs["PAPA_GREET_CREATE_PROFILE"] = {
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
+    preferredIndex = 3,
     OnShow = function(self)
+        self:SetFrameStrata("TOOLTIP")
         self.editBox:SetText("")
+        self.editBox:SetFocus()
     end,
     OnAccept = function(self)
         local profileName = sanitizeInput(self.editBox:GetText(), MAX_PROFILE_NAME_LENGTH)
@@ -231,6 +249,10 @@ StaticPopupDialogs["PAPA_GREET_DELETE_PROFILE"] = {
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
+    preferredIndex = 3,
+    OnShow = function(self)
+        self:SetFrameStrata("TOOLTIP")
+    end,
     OnAccept = function(self)
         if currentProfile == DEFAULT_PROFILE then
             print("Cannot delete the Default profile.")
@@ -253,8 +275,11 @@ StaticPopupDialogs["PAPA_GREET_COPY_PROFILE"] = {
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
+    preferredIndex = 3,
     OnShow = function(self)
+        self:SetFrameStrata("TOOLTIP")
         self.editBox:SetText(currentProfile .. " Copy")
+        self.editBox:SetFocus()
     end,
     OnAccept = function(self)
         local profileName = sanitizeInput(self.editBox:GetText(), MAX_PROFILE_NAME_LENGTH)
@@ -286,8 +311,11 @@ StaticPopupDialogs["PAPA_GREET_ADD_GREETING"] = {
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
+    preferredIndex = 3,
     OnShow = function(self)
+        self:SetFrameStrata("TOOLTIP")
         self.editBox:SetText("")
+        self.editBox:SetFocus()
     end,
     OnAccept = function(self)
         local greeting = sanitizeInput(self.editBox:GetText(), MAX_MESSAGE_LENGTH)
@@ -314,8 +342,11 @@ StaticPopupDialogs["PAPA_GREET_ADD_GOODBYE"] = {
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
+    preferredIndex = 3,
     OnShow = function(self)
+        self:SetFrameStrata("TOOLTIP")
         self.editBox:SetText("")
+        self.editBox:SetFocus()
     end,
     OnAccept = function(self)
         local goodbye = sanitizeInput(self.editBox:GetText(), MAX_MESSAGE_LENGTH)
@@ -342,8 +373,11 @@ StaticPopupDialogs["PAPA_GREET_ADD_GREETING_EMOTE"] = {
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
+    preferredIndex = 3,
     OnShow = function(self)
+        self:SetFrameStrata("TOOLTIP")
         self.editBox:SetText("")
+        self.editBox:SetFocus()
     end,
     OnAccept = function(self)
         local emote = sanitizeInput(self.editBox:GetText(), MAX_EMOTE_LENGTH)
@@ -370,8 +404,11 @@ StaticPopupDialogs["PAPA_GREET_ADD_GOODBYE_EMOTE"] = {
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
+    preferredIndex = 3,
     OnShow = function(self)
+        self:SetFrameStrata("TOOLTIP")
         self.editBox:SetText("")
+        self.editBox:SetFocus()
     end,
     OnAccept = function(self)
         local emote = sanitizeInput(self.editBox:GetText(), MAX_EMOTE_LENGTH)
