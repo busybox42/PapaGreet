@@ -103,6 +103,9 @@ local function createButton(name, parent, point, offsetX, offsetY, width, height
     btn:SetSize(width, height)
     btn:SetText(text)
     btn:SetScript("OnClick", function()
+        print("PapaGreet DEBUG: Button clicked: " .. text .. " | Popup: " .. tostring(popup))
+        print("PapaGreet DEBUG: Current profile: " .. tostring(currentProfile))
+        
         -- Check if trying to modify Default profile
         if currentProfile == DEFAULT_PROFILE and (popup == "PAPA_GREET_ADD_GREETING" or 
            popup == "PAPA_GREET_ADD_GOODBYE" or popup == "PAPA_GREET_ADD_GREETING_EMOTE" or 
@@ -110,13 +113,28 @@ local function createButton(name, parent, point, offsetX, offsetY, width, height
             UIErrorsFrame:AddMessage("Cannot modify Default profile. Create a new profile first.", 1.0, 0.0, 0.0)
             return
         end
+        
         if popup then
-            print("PapaGreet: Showing popup: " .. popup)
+            print("PapaGreet DEBUG: Attempting to show popup: " .. popup)
             if StaticPopupDialogs[popup] then
-                StaticPopup_Show(popup)
+                print("PapaGreet DEBUG: Popup definition found!")
+                local dialog = StaticPopup_Show(popup)
+                if dialog then
+                    print("PapaGreet DEBUG: Popup shown successfully")
+                else
+                    print("PapaGreet ERROR: StaticPopup_Show returned nil!")
+                end
             else
-                print("PapaGreet Error: Popup " .. popup .. " not found!")
+                print("PapaGreet ERROR: Popup " .. popup .. " not found in StaticPopupDialogs!")
+                print("PapaGreet DEBUG: Available popups:")
+                for k, v in pairs(StaticPopupDialogs) do
+                    if k:match("PAPA_GREET") then
+                        print("  - " .. k)
+                    end
+                end
             end
+        else
+            print("PapaGreet ERROR: No popup name provided!")
         end
     end)
     return btn
