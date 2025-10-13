@@ -103,29 +103,66 @@ local function createButton(name, parent, point, offsetX, offsetY, width, height
     btn:SetSize(width, height)
     btn:SetText(text)
     btn:SetScript("OnClick", function()
-        if popup then StaticPopup_Show(popup) end
+        -- Check if trying to modify Default profile
+        if currentProfile == DEFAULT_PROFILE and (popup == "PAPA_GREET_ADD_GREETING" or 
+           popup == "PAPA_GREET_ADD_GOODBYE" or popup == "PAPA_GREET_ADD_GREETING_EMOTE" or 
+           popup == "PAPA_GREET_ADD_GOODBYE_EMOTE") then
+            UIErrorsFrame:AddMessage("Cannot modify Default profile. Create a new profile first.", 1.0, 0.0, 0.0)
+            return
+        end
+        if popup then 
+            StaticPopup_Show(popup)
+        end
     end)
     return btn
 end
 
 -- Helper function to create dropdown menus for deleting items
-local function createDeleteDropdown(name, parent, point, offsetX, offsetY, width, itemsKey)
+local function createDeleteDropdown(name, parent, point, offsetX, offsetY, width, itemsKey, label)
+    -- Create label
+    local labelText = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    labelText:SetPoint(point, parent, point, offsetX, offsetY)
+    labelText:SetText(label)
+    
+    -- Create dropdown below the label
     local dropdown = CreateFrame("Frame", name, parent, "UIDropDownMenuTemplate")
-    dropdown:SetPoint(point, offsetX, offsetY)
+    dropdown:SetPoint(point, parent, point, offsetX - 15, offsetY - 20)
     dropdown:SetSize(width, 25)
 
     UIDropDownMenu_Initialize(dropdown, function(self, level)
+        if currentProfile == DEFAULT_PROFILE then
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = "Cannot modify Default profile"
+            info.disabled = true
+            UIDropDownMenu_AddButton(info, level)
+            return
+        end
+        
         local items = PapaGreetSavedVariables.profiles[currentProfile][itemsKey]
+        if #items == 0 then
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = "No items to delete"
+            info.disabled = true
+            UIDropDownMenu_AddButton(info, level)
+            return
+        end
+        
         for i, item in ipairs(items) do
             local info = UIDropDownMenu_CreateInfo()
             info.text = item
             info.func = function()
                 table_remove(items, i)
                 RefreshPapaGreetMenu()
+                CloseDropDownMenus()
             end
             UIDropDownMenu_AddButton(info, level)
         end
     end)
+    
+    -- Set button text
+    UIDropDownMenu_SetText(dropdown, "Select to Delete")
+    
+    return dropdown
 end
 
 -- Define Static Popups (must be defined before ShowPapaGreetMenu)
@@ -417,19 +454,19 @@ function ShowPapaGreetMenu()
 
     -- Create Add Greeting Button and Delete Greeting Dropdown
     createButton("PapaGreetAddGreetingButton", menu, "TOPLEFT", 20, -240, 140, 27, "Add Greeting", "PAPA_GREET_ADD_GREETING")
-    createDeleteDropdown("PapaGreetDeleteGreetingDropdown", menu, "TOPLEFT", 180, -240, 140, "greetings")
+    createDeleteDropdown("PapaGreetDeleteGreetingDropdown", menu, "TOPLEFT", 180, -240, 140, "greetings", "Delete Greeting:")
 
     -- Create Add Goodbye Button and Delete Goodbye Dropdown
     createButton("PapaGreetAddGoodbyeButton", menu, "TOPLEFT", 20, -280, 140, 27, "Add Goodbye", "PAPA_GREET_ADD_GOODBYE")
-    createDeleteDropdown("PapaGreetDeleteGoodbyeDropdown", menu, "TOPLEFT", 180, -280, 140, "goodbyes")
+    createDeleteDropdown("PapaGreetDeleteGoodbyeDropdown", menu, "TOPLEFT", 180, -280, 140, "goodbyes", "Delete Goodbye:")
 
     -- Create Add Greeting Emote Button and Delete Greeting Emote Dropdown
     createButton("PapaGreetAddGreetingEmoteButton", menu, "TOPLEFT", 20, -320, 140, 27, "Add Greeting Emote", "PAPA_GREET_ADD_GREETING_EMOTE")
-    createDeleteDropdown("PapaGreetDeleteGreetingEmoteDropdown", menu, "TOPLEFT", 180, -320, 140, "greetingEmotes")
+    createDeleteDropdown("PapaGreetDeleteGreetingEmoteDropdown", menu, "TOPLEFT", 180, -320, 140, "greetingEmotes", "Delete Greeting Emote:")
 
     -- Create Add Goodbye Emote Button and Delete Goodbye Emote Dropdown
     createButton("PapaGreetAddGoodbyeEmoteButton", menu, "TOPLEFT", 20, -360, 140, 27, "Add Goodbye Emote", "PAPA_GREET_ADD_GOODBYE_EMOTE")
-    createDeleteDropdown("PapaGreetDeleteGoodbyeEmoteDropdown", menu, "TOPLEFT", 180, -360, 140, "goodbyeEmotes")
+    createDeleteDropdown("PapaGreetDeleteGoodbyeEmoteDropdown", menu, "TOPLEFT", 180, -360, 140, "goodbyeEmotes", "Delete Goodbye Emote:")
 
     -- Refresh the menu after creating all elements
     RefreshPapaGreetMenu()
