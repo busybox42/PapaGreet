@@ -543,7 +543,6 @@ SlashCmdList["PAPA"] = function(cmd)
         end
     elseif command == "version" or command == "v" then
         print("|cff00ff00PapaGreet|r version |cffffd7001.2.0|r")
-        print("Author: Alan Denniston")
     else
         print("|cffff0000Unknown command:|r " .. command)
         print("Type |cffffd700/papa|r for help.")
