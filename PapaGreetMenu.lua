@@ -183,9 +183,9 @@ local function createDeleteDropdown(name, parent, point, offsetX, offsetY, width
     labelText:SetPoint(point, parent, point, offsetX, offsetY)
     labelText:SetText(label)
     
-    -- Create dropdown below the label
+    -- Create dropdown below the label (extra spacing to prevent overlap)
     local dropdown = CreateFrame("Frame", name, parent, "UIDropDownMenuTemplate")
-    dropdown:SetPoint(point, parent, point, offsetX - 15, offsetY - 25)
+    dropdown:SetPoint(point, parent, point, offsetX - 15, offsetY - 35)
     dropdown:SetSize(width, 25)
 
     UIDropDownMenu_Initialize(dropdown, function(self, level)
