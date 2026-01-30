@@ -5,6 +5,5 @@
 ## Interface: 40402
 ## SavedVariablesPerCharacter: PapaGreetSavedVariables
 
-Bindings.xml
 PapaGreet.lua
 PapaGreetMenu.lua

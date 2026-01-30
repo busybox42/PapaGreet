@@ -1,5 +1,5 @@
 -- PapaGreetMenu.lua
--- Version: 1.2.2 - Debug Version
+-- Version: 1.3.0 - Midnight Compatible
 
 -- Localize globals for performance
 local CreateFrame = CreateFrame

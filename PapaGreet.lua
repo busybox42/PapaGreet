@@ -44,6 +44,28 @@ function PapaGreetAPI:Initialize()
             SafeCall(LeaveGroup)
         end
     end
+    
+    -- Timer API (abstracted for Midnight compatibility)
+    self.After = function(delay, func)
+        local success, result = SafeCall(C_Timer.After, delay, func)
+        return success and result
+    end
+    
+    self.NewTimer = function(delay, func)
+        local success, result = SafeCall(C_Timer.NewTimer, delay, func)
+        return success and result
+    end
+    
+    self.NewTicker = function(interval, func, numTicks)
+        local success, result = SafeCall(C_Timer.NewTicker, interval, func, numTicks)
+        return success and result
+    end
+    
+    -- Spell API (abstracted for Midnight compatibility)
+    self.GetSpellTexture = function(spellId)
+        local success, result = SafeCall(C_Spell.GetSpellTexture, spellId)
+        return success and result
+    end
 end
 
 PapaGreetAPI:Initialize()
@@ -144,13 +166,13 @@ local function ProcessGreetingQueue()
         for i, queuedGreeting in ipairs(greetingQueue) do
             PapaGreetAPI.SendChatMessage(queuedGreeting.message, queuedGreeting.channel)
             if queuedGreeting.emote then
-                C_Timer.After(queuedGreeting.delayEmote, function()
+                PapaGreetAPI.After(queuedGreeting.delayEmote, function()
                     PapaGreetAPI.DoEmote(queuedGreeting.emote)
                 end)
             end
             -- Call callback after emote delay if provided
             if queuedGreeting.callback then
-                C_Timer.After(queuedGreeting.delayEmote + 0.5, queuedGreeting.callback)
+                PapaGreetAPI.After(queuedGreeting.delayEmote + 0.5, queuedGreeting.callback)
             end
         end
         wipe(greetingQueue)
@@ -194,14 +216,14 @@ local function SendMessageAndEmote(message, emote, delayEmote, callback)
         PapaGreetAPI.SendChatMessage(message, channel)
     end
     if emote then
-        C_Timer.After(delayEmote, function()
+        PapaGreetAPI.After(delayEmote, function()
             PapaGreetAPI.DoEmote(emote)
         end)
     end
     
     -- Call callback after emote delay if provided
     if callback then
-        C_Timer.After(delayEmote + 0.5, callback)
+        PapaGreetAPI.After(delayEmote + 0.5, callback)
     end
     
     return false -- Sent immediately
@@ -314,7 +336,7 @@ local function StartLeaveTimer()
     leaveTimeRemaining = profile.delayLeave
     
     -- Update countdown every second
-    leaveCountdownTicker = C_Timer.NewTicker(1, function()
+    leaveCountdownTicker = PapaGreetAPI.NewTicker(1, function()
         leaveTimeRemaining = leaveTimeRemaining - 1
         UpdateLeaveCountdown()
         
@@ -327,7 +349,7 @@ local function StartLeaveTimer()
     UpdateLeaveCountdown()
     
     -- Final action timer
-    leaveTimer = C_Timer.NewTimer(profile.delayLeave, function()
+    leaveTimer = PapaGreetAPI.NewTimer(profile.delayLeave, function()
         if leaveTimerActive then
             if IsInGroup() then
                 PapaGreetAPI.LeaveParty()
@@ -418,7 +440,7 @@ local function CreatePapaGreetButton()
     local button = CreateFrame("Button", "PapaGreetButton", UIParent, "UIPanelButtonTemplate")
     button:SetSize(BUTTON_SIZE, BUTTON_SIZE)
 
-    local spellTexture = C_Spell.GetSpellTexture(SPELL_ID)
+    local spellTexture = PapaGreetAPI.GetSpellTexture(SPELL_ID)
     local texture = spellTexture or "Interface\\Icons\\INV_Misc_QuestionMark"
     button:SetNormalTexture(texture)
     button:SetPushedTexture(texture)
@@ -565,7 +587,7 @@ SlashCmdList["PAPA"] = function(cmd)
             print("Usage: /papa cd [seconds] (0 to disable)")
         end
     elseif command == "version" or command == "v" then
-        print("|cff00ff00PapaGreet|r version |cffffd7001.2.1|r")
+        print("|cff00ff00PapaGreet|r version |cffffd7001.3.0|r")
     else
         print("|cffff0000Unknown command:|r " .. command)
         print("Type |cffffd700/papa|r for help.")
